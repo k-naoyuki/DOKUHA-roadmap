@@ -160,3 +160,38 @@ root/
    - 各アプリケーションの個別のデプロイメント設定が可能です
 
 このような構成により、モノレポのメリットを活かしながら、各アプリケーションの独立性も保つことができます。
+
+## 6. 初期ディレクトリ構成の作成
+
+推奨構成に基づいて、以下のコマンドで初期ディレクトリ構造を作成しました：
+
+```bash
+mkdir -p apps/frontend apps/backend packages/shared docs scripts
+touch apps/frontend/.gitkeep apps/backend/.gitkeep packages/shared/.gitkeep docs/.gitkeep scripts/.gitkeep
+```
+
+作成された構造：
+```
+root/
+├── apps/
+│   ├── frontend/
+│   │   └── .gitkeep
+│   └── backend/
+│   │   └── .gitkeep
+├── packages/
+│   └── shared/
+│       └── .gitkeep
+├── docs/
+│   └── .gitkeep
+└── scripts/
+    └── .gitkeep
+```
+
+この初期構成では、各ディレクトリに`.gitkeep`ファイルを配置し、空のディレクトリもGitで追跡できるようにしています。これにより、必要なディレクトリ構造を維持しながら、段階的に各コンポーネントを追加していくことができます。
+
+### 次のステップ
+1. パッケージマネージャー（pnpm）のセットアップ
+2. ルートの package.json の作成
+3. フロントエンドの初期化
+4. バックエンドの初期化
+5. 共通パッケージの設定
