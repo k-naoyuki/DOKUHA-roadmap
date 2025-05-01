@@ -10,17 +10,20 @@ importers:
     dependencies:
       drizzle-orm:
         specifier: ^0.43.1
-        version: 0.43.1
+        version: 0.43.1(@cloudflare/workers-types@4.20250430.0)
       hono:
         specifier: ^4.7.7
         version: 4.7.7
     devDependencies:
+      '@cloudflare/workers-types':
+        specifier: ^4.20250430.0
+        version: 4.20250430.0
       drizzle-kit:
         specifier: ^0.31.0
         version: 0.31.0
       wrangler:
         specifier: ^4.4.0
-        version: 4.13.2
+        version: 4.13.2(@cloudflare/workers-types@4.20250430.0)
 
 packages:
 
@@ -66,6 +69,9 @@ packages:
     engines: {node: '>=16'}
     cpu: [x64]
     os: [win32]
+
+  '@cloudflare/workers-types@4.20250430.0':
+    resolution: {integrity: sha512-JWAX7ZhQ7KjkdJwASgG58MZ/pQ15brlnZ9/0YBwDQ0hrJ/LaK392aTRFlj2r/PRKDZ5dOuujRywNYaNpfeFiEA==}
 
   '@cspotcode/source-map-support@0.8.1':
     resolution: {integrity: sha512-IchNf6dN4tHoMFIn/7OE8LWZ19Y6q/67Bmf6vnGREv8RSbBVb9LPJxEcnwrcwX6ixSvaiGoomAUvu4YSxXrVgw==}
@@ -808,6 +814,8 @@ snapshots:
   '@cloudflare/workerd-windows-64@1.20250424.0':
     optional: true
 
+  '@cloudflare/workers-types@4.20250430.0': {}
+
   '@cspotcode/source-map-support@0.8.1':
     dependencies:
       '@jridgewell/trace-mapping': 0.3.9
@@ -1110,7 +1118,9 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  drizzle-orm@0.43.1: {}
+  drizzle-orm@0.43.1(@cloudflare/workers-types@4.20250430.0):
+    optionalDependencies:
+      '@cloudflare/workers-types': 4.20250430.0
 
   esbuild-register@3.6.0(esbuild@0.25.2):
     dependencies:
@@ -1302,7 +1312,7 @@ snapshots:
       '@cloudflare/workerd-linux-arm64': 1.20250424.0
       '@cloudflare/workerd-windows-64': 1.20250424.0
 
-  wrangler@4.13.2:
+  wrangler@4.13.2(@cloudflare/workers-types@4.20250430.0):
     dependencies:
       '@cloudflare/kv-asset-handler': 0.4.0
       '@cloudflare/unenv-preset': 2.3.1(unenv@2.0.0-rc.15)(workerd@1.20250424.0)
@@ -1313,6 +1323,7 @@ snapshots:
       unenv: 2.0.0-rc.15
       workerd: 1.20250424.0
     optionalDependencies:
+      '@cloudflare/workers-types': 4.20250430.0
       fsevents: 2.3.3
       sharp: 0.33.5
     transitivePeerDependencies:

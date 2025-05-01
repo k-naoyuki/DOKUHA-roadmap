@@ -1,9 +1,37 @@
-import { Hono } from 'hono'
+import { D1Database, ExportedHandler } from '@cloudflare/workers-types';
 
-const app = new Hono()
+export interface Env {
+  // If you set another name in the Wrangler config file for the value for 'binding',
+  // replace "DB" with the variable name you defined.
+  productionDB: D1Database;
+}
 
-app.get('/', (c) => {
-  return c.text('Hello Hono!')
-})
+export default {
+  async fetch(request, env): Promise<Response> {
+    const { pathname } = new URL(request.url);
 
-export default app
+    if (pathname === "/api/beverages") {
+      // If you did not use `DB` as your binding name, change it here
+      const { results } = await env.productionDB.prepare(
+        "SELECT * FROM Customers WHERE CompanyName = ?",
+      )
+        .bind("Bs Beverages")
+        .all();
+      return Response.json(results);
+    }
+
+    return new Response(
+      "Call /api/beverages to see everyone who works at Bs Beverages",
+    );
+  },
+} satisfies ExportedHandler<Env>;
+
+// import { Hono } from 'hono'
+
+// const app = new Hono()
+
+// app.get('/', (c) => {
+//   return c.text('Hello Hono!')
+// })
+
+// export default app
