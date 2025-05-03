@@ -25,7 +25,8 @@
     {
       "binding": "productionDB",
       "database_name": "D1_PRODUCTION_DB_NAME",
-      "database_id": "D1_PRODUCTION_DB_ID"
+      "database_id": "D1_PRODUCTION_DB_ID",
+      "migrations_dir": "drizzle"
     }
   ],
   // "ai": {
