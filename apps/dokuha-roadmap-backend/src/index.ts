@@ -1,37 +1,41 @@
-import { D1Database, ExportedHandler } from '@cloudflare/workers-types';
+import { D1Database } from '@cloudflare/workers-types';
+import { drizzle } from "drizzle-orm/d1";
+import { Hono } from "hono";
+import { users } from "../schema";
 
-export interface Env {
-  // If you set another name in the Wrangler config file for the value for 'binding',
-  // replace "DB" with the variable name you defined.
+type Bindings = {
   productionDB: D1Database;
-}
+};
 
-export default {
-  async fetch(request, env): Promise<Response> {
-    const { pathname } = new URL(request.url);
+const app = new Hono<{ Bindings: Bindings }>();
 
-    if (pathname === "/api/beverages") {
-      // If you did not use `DB` as your binding name, change it here
-      const { results } = await env.productionDB.prepare(
-        "SELECT * FROM Customers WHERE CompanyName = ?",
-      )
-        .bind("Bs Beverages")
-        .all();
-      return Response.json(results);
-    }
+app.get("/", (c) => {
+  return c.text("Hello Hono!");
+});
 
-    return new Response(
-      "Call /api/beverages to see everyone who works at Bs Beverages",
-    );
-  },
-} satisfies ExportedHandler<Env>;
+/*****************************************
+ * get users
+ *****************************************/
+app.get("/users", async (c) => {
+  const db = drizzle(c.env.productionDB);
+  const result = await db.select().from(users).all();
+  return c.json(result);
+});
 
-// import { Hono } from 'hono'
+/*****************************************
+ * create users
+ *****************************************/
+app.post("/users", async (c) => {
+  const params = await c.req.json<typeof users.$inferSelect>();
+  const db = drizzle(c.env.productionDB);
 
-// const app = new Hono()
+  const result = await db.insert(users).values({
+    name: params.name,
+    email: params.email,
+    password: params.password,
+  });
 
-// app.get('/', (c) => {
-//   return c.text('Hello Hono!')
-// })
+  return c.json(result);
+});
 
-// export default app
+export default app;
