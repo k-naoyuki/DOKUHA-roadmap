@@ -10,14 +10,12 @@
     "remote:migration": "wrangler d1 migrations apply prod-dokuha-roadmap --remote"
   },
   "dependencies": {
-    "crypto-js": "^4.2.0",
     "drizzle-orm": "^0.43.1",
     "hono": "^4.7.7",
     "uuid": "^11.1.0"
   },
   "devDependencies": {
     "@cloudflare/workers-types": "^4.20250430.0",
-    "@types/crypto-js": "^4.2.2",
     "@types/node": "^22.15.3",
     "drizzle-kit": "^0.31.0",
     "wrangler": "^4.14.1"
