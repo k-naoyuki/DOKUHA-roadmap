@@ -2,16 +2,15 @@ import crypto from 'crypto-js';
 import { users } from '../schema';
 import { v4 as uuidv4 } from 'uuid';
 
-// --- アプリケーション側の挿入処理の例 ---
 export async function createUser(db: any, userData: any) {
-  const userId = randomUUID(); // アプリケーションでUUIDを生成
-  const hashedPassword = await hashPasswordFunction(userData.password); // パスワードをハッシュ化
+  const userId = randomUUID();
+  const hashedPassword = await hashPasswordFunction(userData.password);
 
   await db.insert(users).values({
     id: userId,
     nickname: userData.nickname,
     email: userData.email,
-    password: hashedPassword, // ハッシュ化済みパスワード
+    password: hashedPassword,
     readingMission: userData.readingMission,
     // createdAt と updatedAt はDBのデフォルト/トリガーに任せる
   });
