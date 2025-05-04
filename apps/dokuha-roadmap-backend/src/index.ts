@@ -3,6 +3,7 @@ import { drizzle } from "drizzle-orm/d1";
 import { Hono } from "hono";
 import { users } from "../schema";
 import { createUser } from "./users";
+import { DuplicateEmailError } from './errors';
 
 type Bindings = {
   productionDB: D1Database;
@@ -30,8 +31,22 @@ app.post("/users", async (c) => {
   const params = await c.req.json<typeof users.$inferSelect>();
   const db = drizzle(c.env.productionDB);
 
-  const result = createUser(db, params)
-  return c.json(result);
+  try {
+    const userId = await createUser(db, params);
+    return c.json({ success: true, userId });
+  } catch (error) {
+    if (error instanceof DuplicateEmailError) {
+      return c.json(
+        { success: false, error: error.message },
+        { status: 409 }
+      );
+    }
+    console.error('Unexpected error:', error);
+    return c.json(
+      { success: false, error: 'Internal server error' },
+      { status: 500 }
+    );
+  }
 });
 
 export default app;
