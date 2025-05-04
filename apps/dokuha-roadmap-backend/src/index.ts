@@ -2,6 +2,7 @@ import { D1Database } from '@cloudflare/workers-types';
 import { drizzle } from "drizzle-orm/d1";
 import { Hono } from "hono";
 import { users } from "../schema";
+import { createUser } from "./users";
 
 type Bindings = {
   productionDB: D1Database;
@@ -29,12 +30,7 @@ app.post("/users", async (c) => {
   const params = await c.req.json<typeof users.$inferSelect>();
   const db = drizzle(c.env.productionDB);
 
-  const result = await db.insert(users).values({
-    name: params.name,
-    email: params.email,
-    password: params.password,
-  });
-
+  const result = createUser(db, params)
   return c.json(result);
 });
 
