@@ -1,4 +1,4 @@
-# DrizzleORM と User API の実装
+# DrizzleORM の導入と User API の実装
 
 ## データベース設計
 
@@ -86,4 +86,82 @@ npm run local:migration
 
 # 本番環境での適用
 npm run remote:migration
+```
+
+## ログイン実装時の注意点
+
+### パスワード検証プロセス
+1. **タイミング攻撃対策**
+   - パスワード比較時は定数時間比較を使用
+   - 存在しないユーザーの場合も同じ処理時間を確保
+
+2. **ブルートフォース対策**
+   - ログイン試行回数の制限を実装
+   - 一定回数の失敗後にアカウントを一時的にロック
+   - レート制限の実装を推奨
+
+3. **セッション管理**
+   - JWTトークンを使用する場合は適切な有効期限を設定
+   - セッションIDは十分なエントロピーを確保
+   - トークンのローテーションを実装
+
+4. **エラーメッセージ**
+   - 「メールアドレスが存在しない」「パスワードが間違っている」など個別のエラーは表示しない
+   - 代わりに「メールアドレスまたはパスワードが正しくありません」など一般的なメッセージを使用
+
+5. **ログイン情報の保護**
+   - HTTPS通信の強制
+   - パスワードリセット機能の適切な実装
+   - 二要素認証の検討
+
+### 実装例（疑似コード）
+```typescript
+/**
+ * 入力パスワードが保存されたハッシュと一致するか検証する (Node.js crypto を使用)
+ * @param storedHash "salt(hex):hash(hex)" 形式で保存された文字列
+ * @param inputPassword ユーザーが入力したパスワード
+ * @returns 一致すれば true、しなければ false の Promise
+ */
+function verifyPassword(storedHash: string, inputPassword: string): Promise<boolean> {
+  return new Promise((resolve, reject) => {
+    if (!storedHash || !inputPassword) {
+        return resolve(false); // or reject(new Error(...))
+    }
+    const parts = storedHash.split(':');
+    if (parts.length !== 2) {
+        // 不正な形式のハッシュ
+        console.error("Invalid stored hash format");
+        return resolve(false); // or reject(new Error(...))
+    }
+    const [saltHex, storedKeyHex] = parts;
+
+    // 16進数文字列から Buffer に戻す
+    const salt = Buffer.from(saltHex, 'hex');
+    const storedKey = Buffer.from(storedKeyHex, 'hex');
+
+    // 同じパラメータで入力パスワードのハッシュを計算
+    crypto.pbkdf2(
+      inputPassword,
+      salt,
+      HASH_ITERATIONS,
+      HASH_KEYLEN,
+      HASH_DIGEST,
+      (err, derivedKey) => {
+        if (err) {
+          return reject(err);
+        }
+
+        // timingSafeEqual は同じ長さの Buffer を期待する
+        if (storedKey.length !== derivedKey.length) {
+          console.error("Stored key length does not match derived key length.");
+          return resolve(false);
+        }
+
+        // 安全な比較 (タイミング攻撃対策)
+        const match = crypto.timingSafeEqual(storedKey, derivedKey);
+        resolve(match);
+      }
+    );
+  });
+}
 ```
