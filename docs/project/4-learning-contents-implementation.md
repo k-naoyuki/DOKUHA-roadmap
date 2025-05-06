@@ -18,7 +18,7 @@
 - リクエストボディのバリデーション
 - ユーザーIDの検証
 
-### 3.2 Read
+### 3.2 Read ✅
 - 一覧取得 (GET /api/learning-contents)
   - ユーザーごとの学習コンテンツ一覧
   - ページネーション対応
@@ -75,14 +75,16 @@ curl http://localhost:8787/learning-contents
 
 # ユーザーIDによるフィルタリング
 curl http://localhost:8787/learning-contents?userId=your-user-id
+curl 'http://localhost:8787/learning-contents?userId=d1335a98-684e-452d-ab64-9a808f2690a1'
 
 # ページネーション
-curl http://localhost:8787/learning-contents?page=1&limit=10
+curl 'http://localhost:8787/learning-contents?page=1&limit=10'
 ```
 
 ### Get Single Learning Content
 ```bash
 curl http://localhost:8787/learning-contents/your-content-id
+curl http://localhost:8787/learning-contents/a6b9f521-0233-4e96-a4f0-78b4a7c9d5df
 ```
 
 ### Update Learning Content
