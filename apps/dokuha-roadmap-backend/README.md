@@ -1,8 +1,22 @@
+# Dokuha Roadmap Backend
+
+## Getting Started
 ```txt
 pnpm install
 pnpm run dev
 ```
 
+### migration
+```txt
+pnpm local:migration
+```
+
+### 開発中に GUI でDBを確認したい場合
+```txt
+pnpm studio
+```
+
+## Deploying
 ```txt
 pnpm run deploy
 ```
