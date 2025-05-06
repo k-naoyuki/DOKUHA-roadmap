@@ -52,3 +52,77 @@
 ## 7. ドキュメント
 - APIの仕様書の作成
 - エンドポイントの使用例の追加
+
+## API動作確認用コマンド
+
+### Create Learning Content
+```bash
+curl -X POST http://localhost:8787/learning-contents \
+  -H "Content-Type: application/json" \
+  -d '{
+    "userId": "your-user-id",
+    "title": "プログラミング入門",
+    "totalPage": 300,
+    "currentPage": 1,
+    "note": "初めてのプログラミング学習"
+  }'
+```
+
+### Get Learning Contents List
+```bash
+# 全件取得
+curl http://localhost:8787/learning-contents
+
+# ユーザーIDによるフィルタリング
+curl http://localhost:8787/learning-contents?userId=your-user-id
+
+# ページネーション
+curl http://localhost:8787/learning-contents?page=1&limit=10
+```
+
+### Get Single Learning Content
+```bash
+curl http://localhost:8787/learning-contents/your-content-id
+```
+
+### Update Learning Content
+```bash
+curl -X PUT http://localhost:8787/learning-contents/your-content-id \
+  -H "Content-Type: application/json" \
+  -d '{
+    "currentPage": 50,
+    "note": "Chapter 3まで完了"
+  }'
+```
+
+### Delete Learning Content
+```bash
+curl -X DELETE http://localhost:8787/learning-contents/your-content-id
+```
+
+### レスポンス例
+
+#### 正常系レスポンス
+```json
+{
+  "success": true,
+  "data": {
+    "id": "generated-uuid",
+    "userId": "user-uuid",
+    "title": "プログラミング入門",
+    "totalPage": 300,
+    "currentPage": 1,
+    "note": "初めてのプログラミング学習",
+    "createdAt": "2024-01-01T00:00:00Z",
+    "updatedAt": "2024-01-01T00:00:00Z"
+  }
+}
+```
+
+#### エラーレスポンス
+```json
+{
+  "success": false,
+  "error": "エラーメッセージ"
+}
+```
