@@ -2,10 +2,10 @@
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "dokuha-roadmap-backend",
   "main": "src/index.ts",
-  "compatibility_date": "2025-04-27"
-  // "compatibility_flags": [
-  //   "nodejs_compat"
-  // ],
+  "compatibility_date": "2025-04-27",
+  "compatibility_flags": [
+    "nodejs_compat"
+  ],
   // "vars": {
   //   "MY_VAR": "my-variable"
   // },
@@ -21,13 +21,14 @@
   //     "bucket_name": "my-bucket"
   //   }
   // ],
-  // "d1_databases": [
-  //   {
-  //     "binding": "MY_DB",
-  //     "database_name": "my-database",
-  //     "database_id": ""
-  //   }
-  // ],
+  "d1_databases": [
+    {
+      "binding": "productionDB",
+      "database_name": "D1_PRODUCTION_DB_NAME",
+      "database_id": "D1_PRODUCTION_DB_ID",
+      "migrations_dir": "drizzle"
+    }
+  ],
   // "ai": {
   //   "binding": "AI"
   // },
