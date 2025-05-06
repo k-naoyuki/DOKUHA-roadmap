@@ -263,4 +263,44 @@ app.put("/learning-contents/:id", async (c) => {
   }
 });
 
+/*****************************************
+ * delete learning content
+ *****************************************/
+app.delete("/learning-contents/:id", async (c) => {
+  const db = drizzle(c.env.productionDB);
+  const { id } = c.req.param();
+  
+  try {
+    // 存在確認
+    const existingContent = await db
+      .select()
+      .from(learningContents)
+      .where(eq(learningContents.id, id))
+      .get();
+    
+    if (!existingContent) {
+      return c.json({ 
+        success: false, 
+        error: 'Learning content not found' 
+      }, { status: 404 });
+    }
+
+    // 削除実行
+    await db.delete(learningContents)
+      .where(eq(learningContents.id, id));
+
+    return c.json({ 
+      success: true,
+      message: 'Learning content deleted successfully'
+    });
+    
+  } catch (error) {
+    console.error('Error deleting learning content:', error);
+    return c.json({ 
+      success: false, 
+      error: 'Internal server error' 
+    }, { status: 500 });
+  }
+});
+
 export default app;

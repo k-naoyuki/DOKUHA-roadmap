@@ -30,7 +30,7 @@
 - 進捗（current_page）の更新
 - ノートの更新
 
-### 3.4 Delete (DELETE /api/learning-contents/{id})
+### 3.4 Delete (DELETE /api/learning-contents/{id}) ✅
 - 学習コンテンツの削除
 - 関連するデータの整合性確保
 
