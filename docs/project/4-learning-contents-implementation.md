@@ -4,11 +4,11 @@
 - `schema.ts` にlearning_contentsテーブルの定義を追加
 - ユーザーテーブルとの関連を定義
 
-## 2. 型定義の作成
+## 2. 型定義の作成 ✅
 - learning_contentsテーブルに関する型定義を作成
-  - 新規作成用の型
-  - 更新用の型
-  - レスポンス用の型
+  - CreateLearningContent: 新規作成用の型
+  - UpdateLearningContent: 更新用の型
+  - LearningContent: レスポンス用の型
 
 ## 3. APIエンドポイントの実装
 以下のCRUD操作のAPIを実装：
