@@ -272,6 +272,7 @@ app.put("/learning-contents/:id", async (c) => {
 /*****************************************
  * delete learning content
  *****************************************/
+// TODO: 本当に物理削除でいいのかは改めて要検討（チケット作成済）
 app.delete("/learning-contents/:id", async (c) => {
   const db = drizzle(c.env.productionDB);
   const { id } = c.req.param();
