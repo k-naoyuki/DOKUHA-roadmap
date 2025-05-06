@@ -5,6 +5,7 @@ export default {
   out: "./drizzle",
   dialect: "sqlite",
   dbCredentials: {
+    // TODO: 確かめていないが、以下のファイル名を直接指定するやり方だとチームメンバーがそれぞれ手動でいじる必要がある可能性があるため、必要に応じて修正する
     url: "./.wrangler/state/v3/d1/miniflare-D1DatabaseObject/1b52ece63023367627078964169e02f25e79862c5fb40a72236be4f7aebd8b9e.sqlite",
   },
 } satisfies Config;
