@@ -62,7 +62,13 @@ const createLearningContentSchema = z.object({
   totalPage: z.number().min(1),
   currentPage: z.number().min(1).optional(),
   note: z.string().optional(),
-});
+}).refine(data => {
+  // currentPageが指定されている場合、totalPage以下であることを確認
+  if (data.currentPage) {
+    return data.currentPage <= data.totalPage;
+  }
+  return true;
+}, { message: "現在のページは総ページ数を超えることはできません" });
 
 app.post("/learning-contents", async (c) => {
   const db = drizzle(c.env.productionDB);
