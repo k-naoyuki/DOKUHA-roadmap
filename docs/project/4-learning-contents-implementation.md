@@ -25,7 +25,7 @@
 - 個別取得 (GET /api/learning-contents/{id})
   - 指定されたIDの学習コンテンツ詳細
 
-### 3.3 Update (PUT /api/learning-contents/{id})
+### 3.3 Update (PUT /api/learning-contents/{id}) ✅
 - 既存の学習コンテンツの更新
 - 進捗（current_page）の更新
 - ノートの更新
