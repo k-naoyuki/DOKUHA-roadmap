@@ -7,7 +7,8 @@
     "generate": "drizzle-kit generate",
     "generate:custom": "drizzle-kit generate --custom",
     "local:migration": "wrangler d1 migrations apply prod-dokuha-roadmap --local",
-    "remote:migration": "wrangler d1 migrations apply prod-dokuha-roadmap --remote"
+    "remote:migration": "wrangler d1 migrations apply prod-dokuha-roadmap --remote",
+    "studio": "drizzle-kit studio"
   },
   "dependencies": {
     "drizzle-orm": "^0.43.1",
@@ -18,6 +19,7 @@
   "devDependencies": {
     "@cloudflare/workers-types": "^4.20250430.0",
     "@types/node": "^22.15.3",
+    "better-sqlite3": "^11.9.1",
     "drizzle-kit": "^0.31.0",
     "wrangler": "^4.14.1"
   }
