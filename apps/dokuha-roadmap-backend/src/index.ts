@@ -238,7 +238,6 @@ app.put("/learning-contents/:id", async (c) => {
     await db.update(learningContents)
       .set({
         ...validatedData,
-        updatedAt: sql`CURRENT_TIMESTAMP`,
       })
       .where(eq(learningContents.id, id));
 
