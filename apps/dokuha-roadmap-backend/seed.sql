@@ -26,16 +26,7 @@ INSERT INTO learning_contents (
   300,
   1,
   '初めてのプログラミング学習1'
-);
-
-INSERT INTO learning_contents (
-  id,
-  user_id,
-  title,
-  total_page,
-  current_page,
-  note
-) VALUES (
+),(
   '00000000-0000-0000-0000-000000000002',
   '00000000-0000-0000-0000-000000000001',
   'プログラミング入門2',
