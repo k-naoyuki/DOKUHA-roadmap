@@ -8,7 +8,8 @@
     "generate:custom": "drizzle-kit generate --custom",
     "local:migration": "wrangler d1 migrations apply prod-dokuha-roadmap --local",
     "remote:migration": "wrangler d1 migrations apply prod-dokuha-roadmap --remote",
-    "studio": "npx drizzle-kit studio"
+    "studio": "npx drizzle-kit studio",
+    "seed": "wrangler d1 execute prod-dokuha-roadmap --local --file=seed.sql"
   },
   "dependencies": {
     "drizzle-orm": "^0.43.1",

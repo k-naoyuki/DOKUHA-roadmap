@@ -1,22 +1,27 @@
 # Dokuha Roadmap Backend
 
 ## Getting Started
+
 ```txt
 pnpm install
 pnpm run dev
 ```
 
 ### migration
+
 ```txt
 pnpm local:migration
+pnpm seed
 ```
 
-### 開発中に GUI でDBを確認したい場合
+### 開発中に GUI で DB を確認したい場合
+
 ```txt
 pnpm studio
 ```
 
 ## Deploying
+
 ```txt
 pnpm run deploy
 ```
@@ -31,5 +36,5 @@ Pass the `CloudflareBindings` as generics when instantiation `Hono`:
 
 ```ts
 // src/index.ts
-const app = new Hono<{ Bindings: CloudflareBindings }>()
+const app = new Hono<{ Bindings: CloudflareBindings }>();
 ```
