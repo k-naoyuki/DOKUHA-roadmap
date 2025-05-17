@@ -164,42 +164,63 @@ describe("GET /users", () => {
   });
 });
 
+// Define newUser at a higher scope to share between tests
+const newUser = {
+  email: `${Math.random().toString(36).substring(2, 10)}@example.com`,
+  name: "Test User",
+  nickname: "TestNickname",
+  password: "password123",
+  readingMission: "Complete 5 books",
+};
+
 describe("POST /users", () => {
-	it("should create a new user and return the user ID", async () => {
-		const newUser = {
-			email: `${Math.random().toString(36).substring(2, 10)}@example.com`,
-			name: "Test User",
-			nickname: "TestNickname",
-			password: "password123",
-			readingMission: "Complete 5 books", // 必須フィールドを含める
-		};
-		const response = await SELF.fetch("http://localhost:8787/users", {
-			method: "POST",
-			headers: {
-				"Content-Type": "application/json",
-			},
-			body: JSON.stringify(newUser),
-		});
-		expect(response.status).toBe(200);
-		const data = await response.json() as {
-			id: string;
-			createdAt: string;
-			updatedAt: string;
-			email: string;
-			nickname: string;
-			password: string;
-			readingMission: string;
-			success: boolean;
-		};
-		expect(data).toHaveProperty("id");
-		expect(data.id).toBeDefined();
-		expect(data).toHaveProperty("createdAt");
-		expect(data.createdAt).toBeDefined();
-		expect(data).toHaveProperty("updatedAt");
-		expect(data.updatedAt).toBeDefined();
-		expect(data).toHaveProperty("email", newUser.email);
-		expect(data).toHaveProperty("nickname", newUser.nickname);
-		expect(data).toHaveProperty("readingMission", newUser.readingMission);
-		expect(data).toHaveProperty("success", true);
-	});
+  it("should create a new user and return the user ID", async () => {
+    const response = await SELF.fetch("http://localhost:8787/users", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(newUser),
+    });
+    expect(response.status).toBe(200);
+    const data = await response.json() as {
+      id: string;
+      createdAt: string;
+      updatedAt: string;
+      email: string;
+      nickname: string;
+      password: string;
+      readingMission: string;
+      success: boolean;
+    };
+    console.log("Response data:", data);
+    expect(data).toHaveProperty("id");
+    expect(data.id).toBeDefined();
+    expect(data).toHaveProperty("createdAt");
+    expect(data.createdAt).toBeDefined();
+    expect(data).toHaveProperty("updatedAt");
+    expect(data.updatedAt).toBeDefined();
+    expect(data).toHaveProperty("email", newUser.email);
+    expect(data).toHaveProperty("nickname", newUser.nickname);
+    expect(data).toHaveProperty("readingMission", newUser.readingMission);
+    expect(data).toHaveProperty("success", true);
+
+		const userListResponse = await SELF.fetch("http://localhost:8787/users");
+		expect(userListResponse.status).toBe(200);
+
+		const userListDate: unknown = await userListResponse.json();
+		console.log("GET /users response data:", userListDate);
+
+		expect(Array.isArray(userListDate)).toBe(true);
+
+		if (Array.isArray(userListDate)) {
+			expect(userListDate.length).toBeGreaterThan(0);
+
+			// 作成したユーザーを検索
+			const createdUser = userListDate.find((user: { email: string }) => user.email === newUser.email);
+			expect(createdUser).toBeDefined();
+			expect(createdUser).toHaveProperty("nickname", newUser.nickname);
+			expect(createdUser).toHaveProperty("readingMission", newUser.readingMission);
+		}
+  });
 });
