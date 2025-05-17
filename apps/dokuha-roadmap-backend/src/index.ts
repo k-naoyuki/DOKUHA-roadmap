@@ -20,12 +20,16 @@ app.get("/", (c) => {
 });
 
 /*****************************************
- * get users
+ * get users (exclude password)
  *****************************************/
 app.get("/users", async (c) => {
   const db = drizzle(c.env.productionDB);
   const result = await db.select().from(users).all();
-  return c.json(result);
+
+  // パスワードを除外
+  const usersWithoutPassword = result.map(({ password, ...rest }) => rest);
+
+  return c.json(usersWithoutPassword);
 });
 
 /*****************************************
