@@ -18,7 +18,7 @@ export async function createUser(db: any, userData: any) {
       nickname: userData.nickname,
       email: userData.email,
       password: hashedPassword,
-      readingMission: userData.readingMission,
+      readingMission: userData.readingMission || "",
       // createdAt と updatedAt はDBのデフォルト/トリガーに任せる
     });
 

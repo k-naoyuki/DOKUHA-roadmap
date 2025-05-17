@@ -1,0 +1,31 @@
+name: Backend Tests
+
+on:
+  push:
+    paths:
+      - "apps/dokuha-roadmap-backend/**"
+  pull_request:
+    paths:
+      - "apps/dokuha-roadmap-backend/**"
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+
+      - name: Install pnpm
+        run: npm install -g pnpm
+
+      - name: Install dependencies
+        working-directory: apps/dokuha-roadmap-backend
+        run: pnpm install
+
+      - name: Run tests
+        working-directory: apps/dokuha-roadmap-backend
+        run: pnpm test

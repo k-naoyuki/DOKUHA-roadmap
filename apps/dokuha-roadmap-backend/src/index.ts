@@ -20,12 +20,16 @@ app.get("/", (c) => {
 });
 
 /*****************************************
- * get users
+ * get users (exclude password)
  *****************************************/
 app.get("/users", async (c) => {
   const db = drizzle(c.env.productionDB);
   const result = await db.select().from(users).all();
-  return c.json(result);
+
+  // パスワードを除外
+  const usersWithoutPassword = result.map(({ password, ...rest }) => rest);
+
+  return c.json(usersWithoutPassword);
 });
 
 /*****************************************
@@ -37,7 +41,18 @@ app.post("/users", async (c) => {
 
   try {
     const userId = await createUser(db, params);
-    return c.json({ success: true, userId });
+
+    // パスワード以外のデータをレスポンスとして返却
+    const userData = {
+      id: userId,
+      nickname: params.nickname,
+      email: params.email,
+      readingMission: params.readingMission,
+      createdAt: new Date().toISOString(), // DBのデフォルト値を模倣
+      updatedAt: new Date().toISOString(), // DBのデフォルト値を模倣
+    };
+
+    return c.json({ success: true, ...userData });
   } catch (error) {
     if (error instanceof DuplicateEmailError) {
       return c.json(

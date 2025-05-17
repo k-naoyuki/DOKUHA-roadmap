@@ -12,7 +12,8 @@
     "jsxImportSource": "hono/jsx",
     "types": [
       "@cloudflare/workers-types",
-      "node"
+      "node",
+      "@cloudflare/vitest-pool-workers"
     ],
   },
 }
