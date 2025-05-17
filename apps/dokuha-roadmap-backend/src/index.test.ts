@@ -26,6 +26,11 @@ declare global {
 // import.meta.glob を使って drizzle ディレクトリ内の .sql ファイルを動的に読み込む
 // eager: true にすると、モジュールがPromiseではなく直接返される
 // query: '?raw' でファイル内容を文字列として取得
+// import: 'default' を指定することで、デフォルトエクスポートとして文字列を取得
+	// これは、Viteのimport.meta.globが返す値がデフォルトエクスポートを含む場合に、
+	// そのデフォルトエクスポートを直接取得するために必要です。
+	// 例えば、?raw を使用してファイル内容を文字列としてインポートする場合、
+	// デフォルトエクスポートとして文字列が提供されるため、import: 'default' を指定する必要があります。
 const migrationModules = import.meta.glob('../drizzle/*.sql', { query: '?raw', eager: true, import: 'default' });
 const migrationFileContents: Record<string, string> = {};
 for (const path in migrationModules) {
