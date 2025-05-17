@@ -2,12 +2,12 @@ import { SELF, env } from "cloudflare:test";
 import { describe, it, expect, beforeAll } from "vitest";
 import type { D1Database } from "@cloudflare/workers-types";
 
-// @ts-expect-error: TypeScript might not know how to handle '?raw' imports for JSON without specific vite plugin/setup for JSON type.
-// However, journalJsonContent is parsed by JSON.parse, so string type is fine.
+// @ts-expect-error: TypeScriptがJSONの'?raw'インポートを特定のViteプラグインや設定なしでは認識できない可能性があります。
+// ただし、journalJsonContentはJSON.parseで解析されるため、文字列型で問題ありません。
 import journalJsonContent from '../drizzle/meta/_journal.json?raw';
 
-// @ts-expect-error: TypeScript might not know how to handle '?raw' imports for SQL without a custom.d.ts for '*.sql?raw'
-// However, seedSqlContent is treated as a string, which is fine.
+// @ts-expect-error: TypeScriptがSQLの'?raw'インポートを特定のカスタム型定義なしでは認識できない可能性があります。
+// ただし、seedSqlContentは文字列として扱われるため問題ありません。
 import seedSqlContent from '../seed.sql?raw';
 
 declare module "cloudflare:test" {
@@ -40,8 +40,8 @@ for (const path in migrationModules) {
     if (typeof fileContent === 'string') {
       migrationFileContents[fileName] = fileContent;
     } else {
-      console.error(`Unexpected content type for ${fileName}. Expected string.`);
-      throw new Error(`Invalid content type for migration file: ${fileName}`);
+      console.error(`予期しないコンテンツタイプ: ${fileName}。文字列が期待されます。`);
+      throw new Error(`マイグレーションファイルのコンテンツタイプが無効です: ${fileName}`);
     }
   }
 }
@@ -61,24 +61,24 @@ beforeAll(async () => {
     if (journal.entries && Array.isArray(journal.entries)) {
       migrationFilesToApply = journal.entries.map((entry: { tag: string }) => `${entry.tag}.sql`);
     } else {
-      throw new Error("drizzle/meta/_journal.json format is invalid or has no entries.");
+      throw new Error("drizzle/meta/_journal.json の形式が無効、またはエントリがありません。");
     }
   } catch (e) {
-    console.error("Failed to parse drizzle/meta/_journal.json.", e);
-    throw new Error(`Could not process migrations journal: ${e instanceof Error ? e.message : String(e)}`);
+    console.error("drizzle/meta/_journal.json の解析に失敗しました。", e);
+    throw new Error(`マイグレーションジャーナルの処理に失敗しました: ${e instanceof Error ? e.message : String(e)}`);
   }
   
-  console.log("Applying migrations based on _journal.json...");
+  console.log("_journal.json に基づいてマイグレーションを適用します...");
   for (const fileName of migrationFilesToApply) {
     const fileContent = migrationFileContents[fileName]; // 動的に読み込んだ内容を使用
     if (!fileContent) {
-      console.error(`SQL content for ${fileName} not found in imported map.`);
-      throw new Error(`Missing SQL content for migration: ${fileName}`);
+      console.error(`インポートされたマップに ${fileName} のSQLコンテンツが見つかりません。`);
+      throw new Error(`マイグレーションが見つかりません: ${fileName}`);
     }
 
-    console.log(`Executing migration file: ${fileName}`);
+    console.log(`マイグレーションファイルを実行中: ${fileName}`);
 
-		// マイグレーションファイルを "--> statement-breakpoint" で分割
+    // マイグレーションファイルを "--> statement-breakpoint" で分割
     // マーカーがない場合はファイル全体を一つのブロックとして扱う
     const sqlBlocks = fileContent.includes("--> statement-breakpoint")
       ? fileContent.split("--> statement-breakpoint").map(block => block.trim()).filter(block => block.length > 0)
@@ -89,43 +89,43 @@ beforeAll(async () => {
       let sqlToExecuteAttempt = sqlBlock;
 
       try {
-        console.log(`  Executing block ${i + 1} of ${sqlBlocks.length} from ${fileName}`);
+        console.log(`  ${fileName} のブロック ${i + 1} / ${sqlBlocks.length} を実行中`);
 
         // ブロックの内容に基づいて実行戦略を決定
-				if (sqlBlock.toUpperCase().includes("CREATE TRIGGER")) {
-          console.log(`    Attempting TRIGGER block with prepare().run()`);
+        if (sqlBlock.toUpperCase().includes("CREATE TRIGGER")) {
+          console.log(`    TRIGGERブロックを prepare().run() で実行します`);
           sqlToExecuteAttempt = sqlBlock;
           const stmt = d1db.prepare(sqlBlock);
           await stmt.run();
-          console.log(`    TRIGGER block executed successfully with prepare().run().`);
+          console.log(`    TRIGGERブロックが prepare().run() で正常に実行されました。`);
         } else {
-					// CREATE TABLE, CREATE INDEX など、その他のブロックは1行化して exec()
-          console.log(`    Attempting non-TRIGGER block as a SINGLE LINE`);
+          // CREATE TABLE, CREATE INDEX など、その他のブロックは1行化して exec()
+          console.log(`    TRIGGER以外のブロックを1行化して exec() で実行します`);
           const singleLineBlock = singleLineSql(sqlBlock);
           sqlToExecuteAttempt = singleLineBlock;
           if (singleLineBlock.length > 0) { // 空のブロックを避ける
             await d1db.exec(singleLineBlock);
-            console.log(`    Non-TRIGGER block executed successfully as single line.`);
+            console.log(`    TRIGGER以外のブロックが1行化され、exec() で正常に実行されました。`);
           } else {
-            console.log(`    Skipping empty block after single-lining.`);
+            console.log(`    1行化後に空のブロックが検出されたためスキップします。`);
           }
         }
-        console.log(`  Block ${i + 1} executed successfully.`);
+        console.log(`  ${fileName} のブロック ${i + 1} が正常に実行されました。`);
       } catch (e: any) {
-        console.error(`  Failed to execute block ${i + 1} in ${fileName}. Error:`, e);
-        const errorMessage = e.cause?.message || e.message || 'Unknown D1 error';
-        throw new Error(`Migration failed for ${fileName}, block ${i + 1} (SQL attempted: ${sqlToExecuteAttempt.substring(0,150)}...): ${errorMessage}`);
+        console.error(`  ${fileName} のブロック ${i + 1} の実行に失敗しました。エラー:`, e);
+        const errorMessage = e.cause?.message || e.message || '不明なD1エラー';
+        throw new Error(`マイグレーション ${fileName} のブロック ${i + 1} の実行に失敗しました (試行したSQL: ${sqlToExecuteAttempt.substring(0,150)}...)。エラー: ${errorMessage}`);
       }
     }
-    console.log(`Migration ${fileName} applied successfully.`);
+    console.log(`マイグレーション ${fileName} が正常に適用されました。`);
   }
-  console.log("All migrations applied.");
+  console.log("全てのマイグレーションが適用されました。");
 
   // シードデータの投入
   if (seedSqlContent) {
     let sqlToExecuteAttempt = ""; 
     try {
-      console.log("Applying seed data...");
+      console.log("シードデータを適用中...");
       const seedStatements = seedSqlContent
         .split(';')
         .map((stmt: string) => stmt.trim())
@@ -133,30 +133,30 @@ beforeAll(async () => {
 
       for (const statement of seedStatements) {
         sqlToExecuteAttempt = statement;
-        console.log(`  Executing seed statement: ${statement.substring(0, 70)}...`);
+        console.log(`  シードステートメントを実行中: ${statement.substring(0, 70)}...`);
         const singleLineStatement = singleLineSql(statement);
         if (singleLineStatement.length > 0) {
           await d1db.exec(singleLineStatement);
         }
       }
-      console.log("Seed data inserted successfully.");
+      console.log("シードデータが正常に挿入されました。");
     } catch (e: any) {
-      console.error(`Failed to insert seed data. Error:`, e);
+      console.error(`シードデータの挿入に失敗しました。エラー:`, e);
       const errorMessage = e.cause?.message || e.message;
       if (errorMessage?.includes("UNIQUE constraint failed")) {
-        console.warn("Warning: Seed data insertion caused a UNIQUE constraint failure.");
+        console.warn("警告: シードデータの挿入中にUNIQUE制約違反が発生しました。");
       } else {
-				// sqlToExecuteAttempt はループ内で最後に試行されたステートメントを指す
-        throw new Error(`Seed data insertion failed for statement (approx): ${sqlToExecuteAttempt.substring(0,150)}... Error: ${errorMessage}`);
+        // sqlToExecuteAttempt はループ内で最後に試行されたステートメントを指す
+        throw new Error(`シードデータの挿入に失敗しました (試行したSQL: ${sqlToExecuteAttempt.substring(0,150)}...)。エラー: ${errorMessage}`);
       }
     }
   } else {
-    console.warn("Seed SQL content is empty or not found. Skipping seed data application.");
+    console.warn("シードSQLコンテンツが空、または見つからないため、シードデータの適用をスキップします。");
   }
 });
 
 describe("GET / Hello Hono", () => {
-  it("should return 200 and 'Hello Hono!'", async () => {
+  it("200と 'Hello Hono!' を返す", async () => {
     const response = await SELF.fetch("http://localhost:8787/");
     expect(response.status).toBe(200);
     expect(await response.text()).toBe("Hello Hono!");
@@ -164,7 +164,7 @@ describe("GET / Hello Hono", () => {
 });
 
 describe("GET /users", () => {
-  it("should return 200 and a list of users", async () => {
+  it("200とユーザーリストを返す", async () => {
     const response = await SELF.fetch("http://localhost:8787/users");
     expect(response.status).toBe(200);
     const data: unknown = await response.json();
@@ -185,7 +185,7 @@ const newUser = {
 };
 
 describe("POST /users", () => {
-  it("should create a new user and return the user ID", async () => {
+  it("新しいユーザーを作成し、作成したユーザーを返す", async () => {
     const response = await SELF.fetch("http://localhost:8787/users", {
       method: "POST",
       headers: {
@@ -204,7 +204,7 @@ describe("POST /users", () => {
       readingMission: string;
       success: boolean;
     };
-    console.log("Response data:", data);
+    console.log("レスポンスデータ:", data);
     expect(data).toHaveProperty("id");
     expect(data.id).toBeDefined();
     expect(data).toHaveProperty("createdAt");
@@ -216,22 +216,22 @@ describe("POST /users", () => {
     expect(data).toHaveProperty("readingMission", newUser.readingMission);
     expect(data).toHaveProperty("success", true);
 
-		const userListResponse = await SELF.fetch("http://localhost:8787/users");
-		expect(userListResponse.status).toBe(200);
+    const userListResponse = await SELF.fetch("http://localhost:8787/users");
+    expect(userListResponse.status).toBe(200);
 
-		const userListDate: unknown = await userListResponse.json();
-		console.log("GET /users response data:", userListDate);
+    const userListDate: unknown = await userListResponse.json();
+    console.log("GET /users レスポンスデータ:", userListDate);
 
-		expect(Array.isArray(userListDate)).toBe(true);
+    expect(Array.isArray(userListDate)).toBe(true);
 
-		if (Array.isArray(userListDate)) {
-			expect(userListDate.length).toBeGreaterThan(0);
+    if (Array.isArray(userListDate)) {
+      expect(userListDate.length).toBeGreaterThan(0);
 
-			// 作成したユーザーを検索
-			const createdUser = userListDate.find((user: { email: string }) => user.email === newUser.email);
-			expect(createdUser).toBeDefined();
-			expect(createdUser).toHaveProperty("nickname", newUser.nickname);
-			expect(createdUser).toHaveProperty("readingMission", newUser.readingMission);
-		}
+      // 作成したユーザーを検索
+      const createdUser = userListDate.find((user: { email: string }) => user.email === newUser.email);
+      expect(createdUser).toBeDefined();
+      expect(createdUser).toHaveProperty("nickname", newUser.nickname);
+      expect(createdUser).toHaveProperty("readingMission", newUser.readingMission);
+    }
   });
 });
