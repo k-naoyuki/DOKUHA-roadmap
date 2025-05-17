@@ -2,67 +2,31 @@ import { SELF, env } from "cloudflare:test";
 import { describe, it, expect, beforeAll } from "vitest";
 import type { D1Database } from "@cloudflare/workers-types";
 
-// ?raw インポート (journal.json と seed.sql のみ ?raw を使用)
-// 型エラー回避: ?raw 付きJSONの型宣言
 // @ts-expect-error: TypeScript does not know how to handle '?raw' imports for JSON
 import journalJsonContent from '../drizzle/meta/_journal.json?raw';
-// マイグレーションSQLファイルの内容はハードコードするため、以下の ?raw インポートは不要
-// import migration0000_raw from '../drizzle/0000_open_starhawk.sql?raw';
-// import migration0001_raw from '../drizzle/0001_exotic_adam_warlock.sql?raw';
+// @ts-expect-error: TypeScript does not know how to handle '?raw' imports for SQL
+import migration0000Content from '../drizzle/0000_open_starhawk.sql?raw';
+// @ts-expect-error: TypeScript does not know how to handle '?raw' imports for SQL
+import migration0001Content from '../drizzle/0001_exotic_adam_warlock.sql?raw';
 // @ts-expect-error: TypeScript does not know how to handle '?raw' imports for SQL
 import seedSqlContent from '../seed.sql?raw';
 
-// envの型を拡張してproductionDBを追加
 declare module "cloudflare:test" {
   interface ProvidedEnv {
     productionDB: D1Database;
   }
 }
 
-// SQLファイルをハードコード (ファイルから正確にコピー＆ペーストしてください)
-const migration0000_sql_statements = {
-  createTable: `CREATE TABLE \`users\` (
-  \`id\` text PRIMARY KEY NOT NULL,
-  \`nickname\` text NOT NULL,
-  \`email\` text NOT NULL,
-  \`password\` text NOT NULL,
-  \`reading_mission\` text NOT NULL,
-  \`created_at\` text DEFAULT CURRENT_TIMESTAMP,
-  \`updated_at\` text DEFAULT CURRENT_TIMESTAMP
-);`,
-  createIndex: `CREATE UNIQUE INDEX \`users_email_unique\` ON \`users\` (\`email\`);`,
-  createTrigger: `CREATE TRIGGER \`update_users_updated_at\`
-AFTER UPDATE ON \`users\` FOR EACH ROW
-BEGIN
-    UPDATE \`users\` SET \`updated_at\` = CURRENT_TIMESTAMP WHERE \`id\` = OLD.\`id\`;
-END;`
+// マップで ?raw インポートされたコンテンツを管理
+const migrationFileContents: Record<string, string> = {
+  '0000_open_starhawk.sql': migration0000Content,
+  '0001_exotic_adam_warlock.sql': migration0001Content,
 };
 
-const migration0001_sql_statements = {
-  createTableLearningContents: `CREATE TABLE \`learning_contents\` (
-  \`id\` text PRIMARY KEY NOT NULL,
-  \`user_id\` text NOT NULL,
-  \`title\` text NOT NULL,
-  \`total_page\` integer DEFAULT 1 NOT NULL,
-  \`current_page\` integer DEFAULT 1 NOT NULL,
-  \`note\` text DEFAULT '' NOT NULL,
-  \`created_at\` text DEFAULT CURRENT_TIMESTAMP,
-  \`updated_at\` text DEFAULT CURRENT_TIMESTAMP,
-  FOREIGN KEY (\`user_id\`) REFERENCES \`users\`(\`id\`) ON UPDATE no action ON DELETE no action
-);`,
-  createTriggerLearningContents: `CREATE TRIGGER \`update_learning_contents_updated_at\`
-AFTER UPDATE ON \`learning_contents\` FOR EACH ROW
-BEGIN
-    UPDATE \`learning_contents\` SET \`updated_at\` = CURRENT_TIMESTAMP WHERE \`id\` = OLD.\`id\`;
-END;`
-};
-
-
-const migrationSqlMapForHardcoded: Record<string, any> = {
-  '0000_open_starhawk.sql': migration0000_sql_statements,
-  '0001_exotic_adam_warlock.sql': migration0001_sql_statements,
-};
-
+// SQLを1行に整形するヘルパー関数
+function singleLineSql(sql: string): string {
+  return sql.replace(/\r\n?|\n/g, " ").replace(/\s\s+/g, " ").trim();
+}
 
 beforeAll(async () => {
   const d1db = env.productionDB as D1Database;
@@ -82,70 +46,54 @@ beforeAll(async () => {
   
   console.log("Applying migrations based on _journal.json...");
   for (const fileName of migrationFilesToApply) {
-    const statementsToExecute = migrationSqlMapForHardcoded[fileName];
-    if (!statementsToExecute) {
-      console.error(`SQL statements for ${fileName} not found in hardcoded map.`);
+    const fileContent = migrationFileContents[fileName];
+    if (!fileContent) {
+      console.error(`SQL content for ${fileName} not found in imported map.`);
       throw new Error(`Missing SQL content for migration: ${fileName}`);
     }
 
-    console.log(`Executing migration file: ${fileName} (using hardcoded statements)`);
+    console.log(`Executing migration file: ${fileName}`);
 
-    for (const key in statementsToExecute) {
-      const originalSqlStatement = statementsToExecute[key];
-      let sqlToExecuteAttempt = originalSqlStatement; 
+    // マイグレーションファイルを "--> statement-breakpoint" で分割
+    // マーカーがない場合はファイル全体を一つのブロックとして扱う
+    const sqlBlocks = fileContent.includes("--> statement-breakpoint")
+      ? fileContent.split("--> statement-breakpoint").map(block => block.trim()).filter(block => block.length > 0)
+      : [fileContent.trim()];
+
+    for (let i = 0; i < sqlBlocks.length; i++) {
+      const sqlBlock = sqlBlocks[i];
+      let sqlToExecuteAttempt = sqlBlock;
 
       try {
-        console.log(`  Executing statement: ${key}`);
+        console.log(`  Executing block ${i + 1} of ${sqlBlocks.length} from ${fileName}`);
         
-        if (fileName === '0000_open_starhawk.sql' && key === 'createTable') {
-          // 超単純化SQL (これは検証済みなので、本番では不要かもしれないが、念のため残す)
-          const ultraSimpleSql = "CREATE TABLE simplest_users_test_final_check (id TEXT PRIMARY KEY);";
-          console.log(`    Attempting ULTRA SIMPLE SQL: ${ultraSimpleSql}`);
-          sqlToExecuteAttempt = ultraSimpleSql;
-          await d1db.exec(ultraSimpleSql);
-          console.log(`    ULTRA SIMPLE SQL executed successfully.`);
-
-          console.log(`    Now attempting original createTable as a SINGLE LINE:`);
-          let singleLineCreateTableSql = migration0000_sql_statements.createTable
-            .replace(/\r\n?|\n/g, " ") // 改行をスペースに置換
-            .replace(/\s\s+/g, " ")   // 連続する空白を単一スペースに
-            .trim();                 // 前後の空白をトリム
-          sqlToExecuteAttempt = singleLineCreateTableSql;
-          await d1db.exec(singleLineCreateTableSql);
-          console.log(`    Single line createTable SQL executed successfully.`);
-        
-        } else if ((fileName === '0000_open_starhawk.sql' && key === 'createTrigger') ||
-                   (fileName === '0001_exotic_adam_warlock.sql' && key === 'createTriggerLearningContents')) {
-          // TRIGGERステートメントは prepare().run() を使用
-          console.log(`    Attempting TRIGGER statement with prepare().run(): ${key}`);
-          sqlToExecuteAttempt = originalSqlStatement; // 元の（複数行の）トリガーSQL
-          const stmt = d1db.prepare(originalSqlStatement);
+        // ブロックの内容に基づいて実行戦略を決定
+        if (sqlBlock.toUpperCase().includes("CREATE TRIGGER")) {
+          // TRIGGERステートメントは prepare().run() を使用 (元の複数行のまま)
+          console.log(`    Attempting TRIGGER block with prepare().run()`);
+          sqlToExecuteAttempt = sqlBlock;
+          const stmt = d1db.prepare(sqlBlock);
           await stmt.run();
-          console.log(`    TRIGGER statement ${key} executed successfully with prepare().run().`);
-        
-        } else if (fileName === '0001_exotic_adam_warlock.sql' && key === 'createTableLearningContents') {
-          // learning_contents テーブルも念のため1行化してexec
-          console.log(`    Now attempting createTableLearningContents as a SINGLE LINE:`);
-          let singleLineCreateTableSql = migration0001_sql_statements.createTableLearningContents
-            .replace(/\r\n?|\n/g, " ") // 改行をスペースに置換
-            .replace(/\s\s+/g, " ")   // 連続する空白を単一スペースに
-            .trim();                 // 前後の空白をトリム
-          sqlToExecuteAttempt = singleLineCreateTableSql;
-          await d1db.exec(singleLineCreateTableSql);
-          console.log(`    Single line createTableLearningContents SQL executed successfully.`);
-
+          console.log(`    TRIGGER block executed successfully with prepare().run().`);
         } else {
-          // CREATE INDEX やその他の単純なステートメントは exec() で (以前のテストで成功していたため)
-          sqlToExecuteAttempt = originalSqlStatement;
-          await d1db.exec(originalSqlStatement);
+          // CREATE TABLE, CREATE INDEX など、その他のブロックは1行化して exec()
+          console.log(`    Attempting non-TRIGGER block as a SINGLE LINE`);
+          const singleLineBlock = singleLineSql(sqlBlock);
+          sqlToExecuteAttempt = singleLineBlock;
+          if (singleLineBlock.length > 0) { // 空のブロックを避ける
+            await d1db.exec(singleLineBlock);
+            console.log(`    Non-TRIGGER block executed successfully as single line.`);
+          } else {
+            console.log(`    Skipping empty block after single-lining.`);
+          }
         }
         
-        console.log(`  Statement ${key} (or its version) executed successfully.`);
+        console.log(`  Block ${i + 1} executed successfully.`);
 
       } catch (e: any) {
-        console.error(`  Failed to execute statement ${key} (or its version) in ${fileName}. Error:`, e);
+        console.error(`  Failed to execute block ${i + 1} in ${fileName}. Error:`, e);
         const errorMessage = e.cause?.message || e.message || 'Unknown D1 error';
-        throw new Error(`Migration failed for ${fileName}, statement ${key} (SQL attempted: ${sqlToExecuteAttempt.substring(0,150)}...): ${errorMessage}`);
+        throw new Error(`Migration failed for ${fileName}, block ${i + 1} (SQL attempted: ${sqlToExecuteAttempt.substring(0,150)}...): ${errorMessage}`);
       }
     }
     console.log(`Migration ${fileName} applied successfully.`);
@@ -154,30 +102,31 @@ beforeAll(async () => {
 
   // シードデータの投入
   if (seedSqlContent) {
+    let sqlToExecuteAttempt = ""; // エラーログ用
     try {
       console.log("Applying seed data...");
-      // seedSqlContent をセミコロンで分割し、空のステートメントを除去
       const seedStatements = seedSqlContent
         .split(';')
         .map((stmt: string) => stmt.trim())
         .filter((stmt: string | any[]) => stmt.length > 0);
 
       for (const statement of seedStatements) {
-        console.log(`  Executing seed statement: ${statement.substring(0, 60)}...`);
-        // 各INSERTステートメントを個別に実行
-        // INSERT文は通常1行にしても問題ないが、ここではそのままprepare().run()を試すのが安全か、
-        // あるいは1行化してからexecでも良い。今回は prepare().run() を試す。
-        const stmt = d1db.prepare(statement);
-        await stmt.run();
+        sqlToExecuteAttempt = statement;
+        console.log(`  Executing seed statement: ${statement.substring(0, 70)}...`);
+        const singleLineStatement = singleLineSql(statement);
+        if (singleLineStatement.length > 0) {
+          await d1db.exec(singleLineStatement);
+        }
       }
       console.log("Seed data inserted successfully.");
     } catch (e: any) {
       console.error(`Failed to insert seed data. Error:`, e);
       const errorMessage = e.cause?.message || e.message;
       if (errorMessage?.includes("UNIQUE constraint failed")) {
-        console.warn("Warning: Seed data insertion caused a UNIQUE constraint failure. This might be due to re-running tests on a non-clean DB, or duplicate data in seed.sql.");
+        console.warn("Warning: Seed data insertion caused a UNIQUE constraint failure.");
       } else {
-        throw new Error(`Seed data insertion failed: ${errorMessage}`);
+        // sqlToExecuteAttempt はループ内で最後に試行されたステートメントを指す
+        throw new Error(`Seed data insertion failed for statement (approx): ${sqlToExecuteAttempt.substring(0,150)}... Error: ${errorMessage}`);
       }
     }
   } else {
@@ -199,7 +148,5 @@ describe("GET /users", () => {
     expect(response.status).toBe(200);
     const data = await response.json();
     expect(Array.isArray(data)).toBe(true);
-    // 必要であれば、さらにデータの内容を検証するアサーションを追加
-    //例: if (data.length > 0) { expect(data[0]).toHaveProperty('id'); }
   });
 });
