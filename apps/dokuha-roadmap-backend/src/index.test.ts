@@ -2,13 +2,12 @@ import { SELF, env } from "cloudflare:test";
 import { describe, it, expect, beforeAll } from "vitest";
 import type { D1Database } from "@cloudflare/workers-types";
 
-// @ts-expect-error: TypeScript does not know how to handle '?raw' imports for JSON
+// @ts-expect-error: TypeScript might not know how to handle '?raw' imports for JSON without specific vite plugin/setup for JSON type.
+// However, journalJsonContent is parsed by JSON.parse, so string type is fine.
 import journalJsonContent from '../drizzle/meta/_journal.json?raw';
-// @ts-expect-error: TypeScript does not know how to handle '?raw' imports for SQL
-import migration0000Content from '../drizzle/0000_open_starhawk.sql?raw';
-// @ts-expect-error: TypeScript does not know how to handle '?raw' imports for SQL
-import migration0001Content from '../drizzle/0001_exotic_adam_warlock.sql?raw';
-// @ts-expect-error: TypeScript does not know how to handle '?raw' imports for SQL
+
+// @ts-expect-error: TypeScript might not know how to handle '?raw' imports for SQL without a custom.d.ts for '*.sql?raw'
+// However, seedSqlContent is treated as a string, which is fine.
 import seedSqlContent from '../seed.sql?raw';
 
 declare module "cloudflare:test" {
@@ -17,11 +16,25 @@ declare module "cloudflare:test" {
   }
 }
 
-// マップで ?raw インポートされたコンテンツを管理
-const migrationFileContents: Record<string, string> = {
-  '0000_open_starhawk.sql': migration0000Content,
-  '0001_exotic_adam_warlock.sql': migration0001Content,
-};
+// Vite固有: import.meta.glob の型宣言を追加
+declare global {
+  interface ImportMeta {
+    glob: (pattern: string, options?: { as?: string; eager?: boolean }) => Record<string, any>;
+  }
+}
+
+// import.meta.glob を使って drizzle ディレクトリ内の .sql ファイルを動的に読み込む
+// eager: true にすると、モジュールがPromiseではなく直接返される
+// as: 'raw' でファイル内容を文字列として取得
+const migrationModules = import.meta.glob('../drizzle/*.sql', { as: 'raw', eager: true });
+const migrationFileContents: Record<string, string> = {};
+for (const path in migrationModules) {
+  const fileName = path.split('/').pop(); // path (例: ../drizzle/0000_open_starhawk.sql) からファイル名を取得
+  if (fileName) {
+    migrationFileContents[fileName] = migrationModules[path];
+  }
+}
+// これで migrationFileContents に {'0000_open_starhawk.sql': "SQL content...", '0001_exotic_adam_warlock.sql': "SQL content..."} が入ります。
 
 // SQLを1行に整形するヘルパー関数
 function singleLineSql(sql: string): string {
@@ -46,7 +59,7 @@ beforeAll(async () => {
   
   console.log("Applying migrations based on _journal.json...");
   for (const fileName of migrationFilesToApply) {
-    const fileContent = migrationFileContents[fileName];
+    const fileContent = migrationFileContents[fileName]; // 動的に読み込んだ内容を使用
     if (!fileContent) {
       console.error(`SQL content for ${fileName} not found in imported map.`);
       throw new Error(`Missing SQL content for migration: ${fileName}`);
@@ -54,7 +67,7 @@ beforeAll(async () => {
 
     console.log(`Executing migration file: ${fileName}`);
 
-    // マイグレーションファイルを "--> statement-breakpoint" で分割
+		// マイグレーションファイルを "--> statement-breakpoint" で分割
     // マーカーがない場合はファイル全体を一つのブロックとして扱う
     const sqlBlocks = fileContent.includes("--> statement-breakpoint")
       ? fileContent.split("--> statement-breakpoint").map(block => block.trim()).filter(block => block.length > 0)
@@ -66,17 +79,16 @@ beforeAll(async () => {
 
       try {
         console.log(`  Executing block ${i + 1} of ${sqlBlocks.length} from ${fileName}`);
-        
+
         // ブロックの内容に基づいて実行戦略を決定
-        if (sqlBlock.toUpperCase().includes("CREATE TRIGGER")) {
-          // TRIGGERステートメントは prepare().run() を使用 (元の複数行のまま)
+				if (sqlBlock.toUpperCase().includes("CREATE TRIGGER")) {
           console.log(`    Attempting TRIGGER block with prepare().run()`);
           sqlToExecuteAttempt = sqlBlock;
           const stmt = d1db.prepare(sqlBlock);
           await stmt.run();
           console.log(`    TRIGGER block executed successfully with prepare().run().`);
         } else {
-          // CREATE TABLE, CREATE INDEX など、その他のブロックは1行化して exec()
+					// CREATE TABLE, CREATE INDEX など、その他のブロックは1行化して exec()
           console.log(`    Attempting non-TRIGGER block as a SINGLE LINE`);
           const singleLineBlock = singleLineSql(sqlBlock);
           sqlToExecuteAttempt = singleLineBlock;
@@ -87,9 +99,7 @@ beforeAll(async () => {
             console.log(`    Skipping empty block after single-lining.`);
           }
         }
-        
         console.log(`  Block ${i + 1} executed successfully.`);
-
       } catch (e: any) {
         console.error(`  Failed to execute block ${i + 1} in ${fileName}. Error:`, e);
         const errorMessage = e.cause?.message || e.message || 'Unknown D1 error';
@@ -102,7 +112,7 @@ beforeAll(async () => {
 
   // シードデータの投入
   if (seedSqlContent) {
-    let sqlToExecuteAttempt = ""; // エラーログ用
+    let sqlToExecuteAttempt = ""; 
     try {
       console.log("Applying seed data...");
       const seedStatements = seedSqlContent
@@ -125,7 +135,7 @@ beforeAll(async () => {
       if (errorMessage?.includes("UNIQUE constraint failed")) {
         console.warn("Warning: Seed data insertion caused a UNIQUE constraint failure.");
       } else {
-        // sqlToExecuteAttempt はループ内で最後に試行されたステートメントを指す
+				// sqlToExecuteAttempt はループ内で最後に試行されたステートメントを指す
         throw new Error(`Seed data insertion failed for statement (approx): ${sqlToExecuteAttempt.substring(0,150)}... Error: ${errorMessage}`);
       }
     }
