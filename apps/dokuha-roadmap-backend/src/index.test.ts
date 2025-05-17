@@ -19,19 +19,25 @@ declare module "cloudflare:test" {
 // Vite固有: import.meta.glob の型宣言を追加
 declare global {
   interface ImportMeta {
-    glob: (pattern: string, options?: { as?: string; eager?: boolean }) => Record<string, any>;
+    glob: (pattern: string, options?: { query?: string; eager?: boolean; import?: string }) => Record<string, any>;
   }
 }
 
 // import.meta.glob を使って drizzle ディレクトリ内の .sql ファイルを動的に読み込む
 // eager: true にすると、モジュールがPromiseではなく直接返される
-// as: 'raw' でファイル内容を文字列として取得
-const migrationModules = import.meta.glob('../drizzle/*.sql', { as: 'raw', eager: true });
+// query: '?raw' でファイル内容を文字列として取得
+const migrationModules = import.meta.glob('../drizzle/*.sql', { query: '?raw', eager: true, import: 'default' });
 const migrationFileContents: Record<string, string> = {};
 for (const path in migrationModules) {
   const fileName = path.split('/').pop(); // path (例: ../drizzle/0000_open_starhawk.sql) からファイル名を取得
   if (fileName) {
-    migrationFileContents[fileName] = migrationModules[path];
+    const fileContent = migrationModules[path];
+    if (typeof fileContent === 'string') {
+      migrationFileContents[fileName] = fileContent;
+    } else {
+      console.error(`Unexpected content type for ${fileName}. Expected string.`);
+      throw new Error(`Invalid content type for migration file: ${fileName}`);
+    }
   }
 }
 // これで migrationFileContents に {'0000_open_starhawk.sql': "SQL content...", '0001_exotic_adam_warlock.sql': "SQL content..."} が入ります。
