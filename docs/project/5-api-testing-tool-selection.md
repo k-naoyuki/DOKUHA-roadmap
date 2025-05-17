@@ -335,3 +335,219 @@ AssertionError: expected 500 to be 200 // Object.is equality
   * **テストケース**: `GET /` と `GET /users` のエンドポイントテストは、上記セットアップが成功したことで、正常に実行されるようになった。
 
 この一連のデバッグと修正により、Cloudflare D1のテスト環境特有のSQL実行の癖に対応し、安定したテスト実行環境を構築することができました。
+
+
+## SQLファイルをハードコードしてしまっているところは、実際のマイグレーションファイルを利用する形に変更
+テストが成功するようになった現在の `src/index.test.ts` の状態から、ハードコードされたSQL定義を元の `?raw` インポートでマイグレーションファイルとシードファイルの内容を読み込む形に戻し、かつ、これまでのデバッグで判明したD1の挙動に対応するためのSQL処理（1行化、`prepare().run()` の使用）を適用する形にリファクタリングします。
+
+**リファクタリングの方針:**
+
+1.  **`?raw` インポートの復活**: `drizzle` ディレクトリ内のマイグレーションSQLファイル (`0000_open_starhawk.sql`, `0001_exotic_adam_warlock.sql`) を再度 `?raw` でインポートします。
+2.  **`migrationSqlMap` の再構築**: `?raw` でインポートしたSQL文字列を使って `migrationSqlMap` を動的に構築します。
+3.  **SQL実行戦略の適用**:
+      * `CREATE TABLE` ステートメント: `?raw` で読み込んだ内容から抽出し、1行化して `d1db.exec()` で実行。
+      * `CREATE INDEX` ステートメント: `?raw` で読み込んだ内容から抽出し、そのまま（または1行化して） `d1db.exec()` で実行。
+      * `CREATE TRIGGER` ステートメント: `?raw` で読み込んだ内容から抽出し、`d1db.prepare().run()` で実行。
+      * シードSQL: `?raw` で読み込んだ内容をセミコロンで分割し、各 `INSERT` ステートメントを1行化して `d1db.exec()` (または `prepare().run()`) で実行。
+4.  **ステートメントの抽出**: 各マイグレーションファイル（文字列として読み込まれる）から、`CREATE TABLE`, `CREATE INDEX`, `CREATE TRIGGER` の各部分を適切に抽出するロジックが必要になります。Drizzleのマイグレーションファイルは `--> statement-breakpoint` で区切られているため、これを手がかりに分割するか、あるいは各ファイルが特定の種類のステートメントのみを含むと仮定して処理します（今回は後者の、ファイル全体が特定の処理単位というよりは、ファイル内の各論理ステートメントを扱う形を目指します）。
+
+ただし、1つのマイグレーションファイルに複数の種類のステートメント（例: `CREATE TABLE` と `CREATE INDEX` と `CREATE TRIGGER` が混在）が含まれているため、これを正確にパースして種類ごとに異なる実行戦略を適用するのは非常に複雑になります。
+
+より現実的で堅牢なアプローチは、**各マイグレーションファイルの内容全体を、D1が最も安定して解釈できる方法で実行する**ことです。これまでの経験から、それは以下のいずれか、または組み合わせです。
+
+  * SQL文字列全体を1行にして `exec()`。
+  * SQL文字列全体を `prepare().run()`（ただし、`prepare()` が複数ステートメントを直接サポートするかはD1の仕様次第。通常は単一ステートメント）。
+  * SQL文字列をセミコロンで分割し、各ステートメントを個別に処理（1行化して`exec` or `prepare().run`）。
+
+Drizzleのマイグレーションファイルは、`--> statement-breakpoint` で区切られたブロックがそれぞれ独立した実行単位であることが多いです。このマーカーで分割し、各ブロックに対して適切な処理を行うのが良いでしょう。
+
+ここでは、以下の戦略でリファクタリングします。
+
+  * `drizzle/meta/_journal.json` を読んでマイグレーションファイル名を取得。
+  * 各マイグレーションファイルを `?raw` でインポート。
+  * 各マイグレーションファイルの内容を `--> statement-breakpoint` で分割。もしマーカーがなければ、ファイル全体を単一ブロックとして扱う。
+  * 分割された各SQLブロックに対して、以下のルールを適用:
+      * 主に `CREATE TRIGGER` を含むブロック（`BEGIN...END` があるもの）は `prepare().run()` で実行。
+      * それ以外のブロック（主に `CREATE TABLE`, `CREATE INDEX`）は、1行に整形してから `exec()` で実行。
+  * シードSQLは従来通り、セミコロンで分割し、各ステートメントを1行化して `exec()`。
+
+**`src/index.test.ts` のリファクタリング案:**
+
+```typescript
+import { SELF, env } from "cloudflare:test";
+import { describe, it, expect, beforeAll } from "vitest";
+import type { D1Database } from "@cloudflare/workers-types";
+
+// @ts-expect-error: TypeScript does not know how to handle '?raw' imports for JSON
+import journalJsonContent from '../drizzle/meta/_journal.json?raw';
+// @ts-expect-error: TypeScript does not know how to handle '?raw' imports for SQL
+import migration0000Content from '../drizzle/0000_open_starhawk.sql?raw';
+// @ts-expect-error: TypeScript does not know how to handle '?raw' imports for SQL
+import migration0001Content from '../drizzle/0001_exotic_adam_warlock.sql?raw';
+// @ts-expect-error: TypeScript does not know how to handle '?raw' imports for SQL
+import seedSqlContent from '../seed.sql?raw';
+
+declare module "cloudflare:test" {
+  interface ProvidedEnv {
+    productionDB: D1Database;
+  }
+}
+
+// マップで ?raw インポートされたコンテンツを管理
+const migrationFileContents: Record<string, string> = {
+  '0000_open_starhawk.sql': migration0000Content,
+  '0001_exotic_adam_warlock.sql': migration0001Content,
+};
+
+// SQLを1行に整形するヘルパー関数
+function singleLineSql(sql: string): string {
+  return sql.replace(/\r\n?|\n/g, " ").replace(/\s\s+/g, " ").trim();
+}
+
+beforeAll(async () => {
+  const d1db = env.productionDB as D1Database;
+
+  let migrationFilesToApply: string[] = [];
+  try {
+    const journal = JSON.parse(journalJsonContent);
+    if (journal.entries && Array.isArray(journal.entries)) {
+      migrationFilesToApply = journal.entries.map((entry: { tag: string }) => `${entry.tag}.sql`);
+    } else {
+      throw new Error("drizzle/meta/_journal.json format is invalid or has no entries.");
+    }
+  } catch (e) {
+    console.error("Failed to parse drizzle/meta/_journal.json.", e);
+    throw new Error(`Could not process migrations journal: ${e instanceof Error ? e.message : String(e)}`);
+  }
+  
+  console.log("Applying migrations based on _journal.json...");
+  for (const fileName of migrationFilesToApply) {
+    const fileContent = migrationFileContents[fileName];
+    if (!fileContent) {
+      console.error(`SQL content for ${fileName} not found in imported map.`);
+      throw new Error(`Missing SQL content for migration: ${fileName}`);
+    }
+
+    console.log(`Executing migration file: ${fileName}`);
+
+    // マイグレーションファイルを "--> statement-breakpoint" で分割
+    // マーカーがない場合はファイル全体を一つのブロックとして扱う
+    const sqlBlocks = fileContent.includes("--> statement-breakpoint")
+      ? fileContent.split("--> statement-breakpoint").map(block => block.trim()).filter(block => block.length > 0)
+      : [fileContent.trim()];
+
+    for (let i = 0; i < sqlBlocks.length; i++) {
+      const sqlBlock = sqlBlocks[i];
+      let sqlToExecuteAttempt = sqlBlock;
+
+      try {
+        console.log(`  Executing block ${i + 1} of ${sqlBlocks.length} from ${fileName}`);
+        
+        // ブロックの内容に基づいて実行戦略を決定
+        if (sqlBlock.toUpperCase().includes("CREATE TRIGGER")) {
+          // TRIGGERステートメントは prepare().run() を使用 (元の複数行のまま)
+          console.log(`    Attempting TRIGGER block with prepare().run()`);
+          sqlToExecuteAttempt = sqlBlock;
+          const stmt = d1db.prepare(sqlBlock);
+          await stmt.run();
+          console.log(`    TRIGGER block executed successfully with prepare().run().`);
+        } else {
+          // CREATE TABLE, CREATE INDEX など、その他のブロックは1行化して exec()
+          console.log(`    Attempting non-TRIGGER block as a SINGLE LINE`);
+          const singleLineBlock = singleLineSql(sqlBlock);
+          sqlToExecuteAttempt = singleLineBlock;
+          if (singleLineBlock.length > 0) { // 空のブロックを避ける
+            await d1db.exec(singleLineBlock);
+            console.log(`    Non-TRIGGER block executed successfully as single line.`);
+          } else {
+            console.log(`    Skipping empty block after single-lining.`);
+          }
+        }
+        
+        console.log(`  Block ${i + 1} executed successfully.`);
+
+      } catch (e: any) {
+        console.error(`  Failed to execute block ${i + 1} in ${fileName}. Error:`, e);
+        const errorMessage = e.cause?.message || e.message || 'Unknown D1 error';
+        throw new Error(`Migration failed for ${fileName}, block ${i + 1} (SQL attempted: ${sqlToExecuteAttempt.substring(0,150)}...): ${errorMessage}`);
+      }
+    }
+    console.log(`Migration ${fileName} applied successfully.`);
+  }
+  console.log("All migrations applied.");
+
+  // シードデータの投入
+  if (seedSqlContent) {
+    try {
+      console.log("Applying seed data...");
+      const seedStatements = seedSqlContent
+        .split(';')
+        .map(stmt => stmt.trim())
+        .filter(stmt => stmt.length > 0);
+
+      let sqlToExecuteAttempt = ""; // エラーログ用
+      for (const statement of seedStatements) {
+        sqlToExecuteAttempt = statement;
+        console.log(`  Executing seed statement: ${statement.substring(0, 70)}...`);
+        const singleLineStatement = singleLineSql(statement);
+        if (singleLineStatement.length > 0) {
+          await d1db.exec(singleLineStatement);
+        }
+      }
+      console.log("Seed data inserted successfully.");
+    } catch (e: any) {
+      console.error(`Failed to insert seed data. Error:`, e);
+      const errorMessage = e.cause?.message || e.message;
+      if (errorMessage?.includes("UNIQUE constraint failed")) {
+        console.warn("Warning: Seed data insertion caused a UNIQUE constraint failure.");
+      } else {
+        // sqlToExecuteAttempt はループ内で最後に試行されたステートメントを指す
+        throw new Error(`Seed data insertion failed for statement (approx): ${sqlToExecuteAttempt.substring(0,150)}... Error: ${errorMessage}`);
+      }
+    }
+  } else {
+    console.warn("Seed SQL content is empty or not found. Skipping seed data application.");
+  }
+});
+
+describe("GET / Hello Hono", () => {
+  it("should return 200 and 'Hello Hono!'", async () => {
+    const response = await SELF.fetch("http://localhost:8787/");
+    expect(response.status).toBe(200);
+    expect(await response.text()).toBe("Hello Hono!");
+  });
+});
+
+describe("GET /users", () => {
+  it("should return 200 and a list of users", async () => {
+    const response = await SELF.fetch("http://localhost:8787/users");
+    expect(response.status).toBe(200);
+    const data = await response.json();
+    expect(Array.isArray(data)).toBe(true);
+  });
+});
+```
+
+**主な変更点と説明:**
+
+1.  **`?raw` インポートの復活**:
+      * `migration0000Content` と `migration0001Content` として、各マイグレーションSQLファイルの内容を `?raw` でインポートします。
+      * これらの内容を `migrationFileContents` マップに格納し、ファイル名でアクセスできるようにします。
+2.  **ヘルパー関数 `singleLineSql`**: SQL文字列を1行に整形する処理を共通化しました。
+3.  **マイグレーション実行ロジックの変更**:
+      * 各マイグレーションファイルの内容 (`fileContent`) を取得します。
+      * `fileContent` を `--> statement-breakpoint` 文字列で分割します。これにより、Drizzle Kitが意図する実行単位のブロックの配列 (`sqlBlocks`) を得ます。もしマーカーがなければ、ファイル全体を単一ブロックとして扱います。
+      * 各 `sqlBlock` についてループ処理します。
+      * ブロックの文字列内に `CREATE TRIGGER` (大文字・小文字を区別しない比較) が含まれているかを確認します。
+          * 含まれていれば、そのブロック全体を（複数行のまま）`d1db.prepare(sqlBlock).run()` で実行します。
+          * 含まれていなければ（`CREATE TABLE`, `CREATE INDEX` などと想定）、そのブロックを `singleLineSql()` で1行化し、`d1db.exec()` で実行します。空のブロックはスキップします。
+4.  **シードデータの実行**: 従来通り、セミコロンで分割し、各ステートメントを `singleLineSql()` で1行化して `d1db.exec()` で実行します。
+
+**注意点とさらなる改善の可能性:**
+
+  * **`--> statement-breakpoint` の扱い**: このマーカーはDrizzle Kitの内部的なもので、必ずしも全てのSQLブロックがこのマーカーで区切られているとは限りませんし、マーカー自体がSQLの一部として解釈されるべきではありません。上記の分割ロジックでは、マーカー自体は含まれずにブロックが得られるはずですが、注意が必要です。
+  * **SQLブロックの種類判定**: `sqlBlock.toUpperCase().includes("CREATE TRIGGER")` という判定は単純ですが、より複雑なケースでは不十分かもしれません。しかし、現状のマイグレーションファイルの内容であれば機能するはずです。
+  * **堅牢性**: より堅牢なSQLパーサーを使うか、Drizzle ORMが提供するプログラム的なマイグレーション実行機能（もしD1向けに存在すれば）を利用するのが理想的ですが、現在のCloudflare Workersのテスト環境の制約とD1の挙動を考慮すると、上記のような文字列処理ベースのアプローチが現実的な落としどころになることが多いです。
+
+このリファクタリングにより、テストコードはハードコードされたSQLから解放され、実際のマイグレーションファイルを参照するようになり、メンテナンス性が向上するはずです。
+再度 `pnpm test` を実行して、全てのテストが成功することを確認してください。
