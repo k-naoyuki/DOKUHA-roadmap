@@ -156,7 +156,50 @@ describe("GET /users", () => {
   it("should return 200 and a list of users", async () => {
     const response = await SELF.fetch("http://localhost:8787/users");
     expect(response.status).toBe(200);
-    const data = await response.json();
+    const data: unknown = await response.json();
     expect(Array.isArray(data)).toBe(true);
+    if (Array.isArray(data)) {
+      expect(data.length).toBeGreaterThan(0);
+    }
   });
+});
+
+describe("POST /users", () => {
+	it("should create a new user and return the user ID", async () => {
+		const newUser = {
+			email: `${Math.random().toString(36).substring(2, 10)}@example.com`,
+			name: "Test User",
+			nickname: "TestNickname",
+			password: "password123",
+			readingMission: "Complete 5 books", // 必須フィールドを含める
+		};
+		const response = await SELF.fetch("http://localhost:8787/users", {
+			method: "POST",
+			headers: {
+				"Content-Type": "application/json",
+			},
+			body: JSON.stringify(newUser),
+		});
+		expect(response.status).toBe(200);
+		const data = await response.json() as {
+			id: string;
+			createdAt: string;
+			updatedAt: string;
+			email: string;
+			nickname: string;
+			password: string;
+			readingMission: string;
+			success: boolean;
+		};
+		expect(data).toHaveProperty("id");
+		expect(data.id).toBeDefined();
+		expect(data).toHaveProperty("createdAt");
+		expect(data.createdAt).toBeDefined();
+		expect(data).toHaveProperty("updatedAt");
+		expect(data.updatedAt).toBeDefined();
+		expect(data).toHaveProperty("email", newUser.email);
+		expect(data).toHaveProperty("nickname", newUser.nickname);
+		expect(data).toHaveProperty("readingMission", newUser.readingMission);
+		expect(data).toHaveProperty("success", true);
+	});
 });

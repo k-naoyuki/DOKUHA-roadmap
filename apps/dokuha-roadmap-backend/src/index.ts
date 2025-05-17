@@ -37,7 +37,18 @@ app.post("/users", async (c) => {
 
   try {
     const userId = await createUser(db, params);
-    return c.json({ success: true, userId });
+
+    // パスワード以外のデータをレスポンスとして返却
+    const userData = {
+      id: userId,
+      nickname: params.nickname,
+      email: params.email,
+      readingMission: params.readingMission,
+      createdAt: new Date().toISOString(), // DBのデフォルト値を模倣
+      updatedAt: new Date().toISOString(), // DBのデフォルト値を模倣
+    };
+
+    return c.json({ success: true, ...userData });
   } catch (error) {
     if (error instanceof DuplicateEmailError) {
       return c.json(
