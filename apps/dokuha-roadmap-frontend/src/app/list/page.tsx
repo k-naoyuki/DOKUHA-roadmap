@@ -76,19 +76,19 @@ export default function list(){
                 const registDate = new Date(c.createdAt).toLocaleDateString('ja-JP');
 
                 return (
-                  <tr key={c.id} style={{ borderBottom: '1px solid #ddd' }}>
-                    <td style={{ textAlign: 'center' }}>{index + 1}</td>
-                    <td style={{ textAlign: 'center' }}>{c.title}</td>
-                    <td style={{ textAlign: 'center' }}>{progress}%</td>
-                    <td style={{ textAlign: 'center' }}>{updateDate}</td>
-                    <td style={{ textAlign: 'center' }}>{registDate}</td>
-                    <td style={{ textAlign: 'center' }}>
+                  <tr key={c.id} className="border-b border-gray-300">
+                    <td className="text-center">{index + 1}</td>
+                    <td className="text-center">{c.title}</td>
+                    <td className="text-center">{progress}%</td>
+                    <td className="text-center">{updateDate}</td>
+                    <td className="text-center">{registDate}</td>
+                    <td className="text-center">
                       <Button
                         name='編集'
                         onClick={handleEditClick}
                       />
                     </td>
-                    <td style={{ textAlign: 'center' }}>
+                    <td className="text-center">
                       <Button
                         name='削除'
                         onClick={handleDeleteClick}
