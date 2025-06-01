@@ -57,9 +57,9 @@ export default function list(){
         {contents.length === 0 ? (
           <p>学習コンテンツが見つかりませんでした。</p>
         ) : (
-          <table style={{ width: '100%', borderCollapse: 'collapse', marginTop: '20px' }}>
+          <table className="w-full border-collapse mt-5">
             <thead>
-              <tr style={{ backgroundColor: '#f2f2f2' }}>
+              <tr className="bg-gray-100">
                 <th>No</th>
                 <th>タイトル</th>
                 <th>進捗率</th>
