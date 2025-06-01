@@ -2,9 +2,9 @@
   "name": "dokuha-roadmap-frontend",
   "version": "0.1.0",
   "private": true,
-  "proxy": "http://localhost:8787",
   "scripts": {
     "dev": "next dev --turbopack",
+    "cp:env": "cp .env.example .env.local",
     "build": "next build",
     "start": "next start",
     "lint": "next lint"
