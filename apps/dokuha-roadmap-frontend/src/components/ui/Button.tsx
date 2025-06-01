@@ -1,6 +1,6 @@
 // src/components/ui/Button.tsx
 
-import React from 'react';
+//import React from 'react';
 
 // ボタンコンポーネントが受け取るプロパティ（Props）の型定義
 interface ButtonProps {
@@ -27,6 +27,7 @@ const buttonStyle: React.CSSProperties = {
 export default function Button({ name, onClick }: ButtonProps) {
   return (
     <button
+			type="button"
       onClick={onClick} // 受け取った onClick 関数をそのままボタンに渡す
       style={buttonStyle} // 定義したスタイルを適用
     >

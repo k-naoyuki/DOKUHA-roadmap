@@ -10,7 +10,7 @@ export default function Home() {
   
   return (
     <div>
-      <button onClick={route}>一覧画面へ遷移</button>
+      <button type="button" onClick={route}>一覧画面へ遷移</button>
     </div>
   );
 }
