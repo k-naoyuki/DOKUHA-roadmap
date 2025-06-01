@@ -32,9 +32,10 @@ export default function list(){
         console.log(data);
         setContents(data.data);
       } catch (error) {
+        // TODO: 適切なエラーハンドリングに置き換える
         console.log('エラーが発生しました:', error);
       } finally {
-        //あとでLoadの状態管理追加しとく
+        //TODO: あとでLoadの状態管理追加しとく
       }
     };
     fetchUsers();
@@ -53,14 +54,14 @@ export default function list(){
   const makeList = () => {
     return (
       <div>
-        <h1>学習コンテンツリスト</h1>
+        <h2>学習コンテンツリスト</h2>
         {contents.length === 0 ? (
           <p>学習コンテンツが見つかりませんでした。</p>
         ) : (
           <table style={{ width: '100%', borderCollapse: 'collapse', marginTop: '20px' }}>
             <thead>
               <tr style={{ backgroundColor: '#f2f2f2' }}>
-                <th>No</th>
+                <th>No.</th>
                 <th>タイトル</th>
                 <th>進捗率</th>
                 <th>更新日</th>

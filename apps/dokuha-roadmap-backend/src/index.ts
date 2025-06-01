@@ -23,7 +23,7 @@ app.use(cors({
     'http://127.0.0.1:3000',
   ],
   allowMethods: ['POST', 'GET', 'PUT', 'DELETE', 'OPTIONS'],
-  exposeHeaders: ['Content-Length', 'X-Kuma-Revision'],
+  exposeHeaders: ['Content-Length'],
   maxAge: 600,
   credentials: true,
 }));
