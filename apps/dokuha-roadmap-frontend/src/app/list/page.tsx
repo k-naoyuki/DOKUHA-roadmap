@@ -22,7 +22,7 @@ export default function list(){
   useEffect(()=>{
     const fetchUsers = async () => {
       try {
-        const response = await fetch(`${process.env.NEXT_PUBLIC_GET_CONTENTS_URL}?userId=${userId}`);
+        const response = await fetch(`${process.env.NEXT_PUBLIC_BE_URL}learning-contents?userId=${userId}`);
 
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
