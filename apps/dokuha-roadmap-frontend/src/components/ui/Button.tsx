@@ -1,8 +1,3 @@
-// src/components/ui/Button.tsx
-
-//import React from 'react';
-
-// ボタンコンポーネントが受け取るプロパティ（Props）の型定義
 interface ButtonProps {
   name: string; // ボタンの表示名（必須）
   onClick: () => void; // クリック時のイベントハンドラ（必須）
@@ -10,20 +5,19 @@ interface ButtonProps {
   // extends React.ButtonHTMLAttributes<HTMLButtonElement>
 }
 
-// Button コンポーネントのスタイル定義（仮のインラインスタイル）
+// 仮のインラインスタイル
 const buttonStyle: React.CSSProperties = {
   backgroundColor: '#007bff', // 青色の背景
-  color: 'white',              // 白色の文字
+  color: 'white',
   border: 'none',              // ボーダーなし
   padding: '8px 12px',         // 内側の余白
   borderRadius: '4px',         // 角を少し丸く
   cursor: 'pointer',           // マウスオーバー時にカーソルをポインタに
-  fontSize: '14px',            // フォントサイズ
+  fontSize: '14px',
   marginRight: '8px',          // ボタン間の右マージン (複数のボタンを並べる場合)
   whiteSpace: 'nowrap',        // ボタン内のテキストが改行されないように
 };
 
-// Button コンポーネントの定義
 export default function Button({ name, onClick }: ButtonProps) {
   return (
     <button
