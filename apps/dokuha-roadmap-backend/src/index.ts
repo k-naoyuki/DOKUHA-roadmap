@@ -20,7 +20,6 @@ app.use(cors({
   origin: [
     'http://localhost:3000',
     'http://192.168.11.6:3000',
-    'http://127.0.0.1:3000',
   ],
   allowMethods: ['POST', 'GET', 'PUT', 'DELETE', 'OPTIONS'],
   exposeHeaders: ['Content-Length'],
