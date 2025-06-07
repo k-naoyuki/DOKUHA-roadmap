@@ -32,12 +32,12 @@ export default function EditPage() {
       return;
     }
 
-    if (totalPage === '' || isNaN(Number(totalPage)) || Number(totalPage) < 1) { 
+    if (totalPage === '' || Number.isNaN(Number(totalPage)) || Number(totalPage) < 1) { 
       alert('総ページ数は必須入力です。1以上の数値を入力してください。');
       return;
     }
 
-    if (currentPage === '' || isNaN(Number(currentPage)) || Number(currentPage) < 1) { 
+    if (currentPage === '' || Number.isNaN(Number(currentPage)) || Number(currentPage) < 1) { 
       alert('現在のページ数は必須入力です。1以上の数値を入力してください。');
       return;
     }
@@ -104,7 +104,7 @@ export default function EditPage() {
           value={totalPage}
           onChange={(e) => {
             const value = e.target.value;
-            setTotalPage(value === '' ? '' : (isNaN(Number(value)) ? 0 : Number(value)));
+            setTotalPage(value === '' ? '' : (Number.isNaN(Number(value)) ? 0 : Number(value)));
           }}
           min="1"
           className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
@@ -123,7 +123,7 @@ export default function EditPage() {
           value={currentPage}
           onChange={(e) => {
             const value = e.target.value;
-            setCurrentPage(value === '' ? '' : (isNaN(Number(value)) ? 0 : Number(value)));
+            setCurrentPage(value === '' ? '' : (Number.isNaN(Number(value)) ? 0 : Number(value)));
           }}
           min="1"
           className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
