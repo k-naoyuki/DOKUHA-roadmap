@@ -2,6 +2,7 @@ import { D1Database } from '@cloudflare/workers-types';
 import { drizzle } from "drizzle-orm/d1";
 import { eq, sql } from "drizzle-orm";
 import { Hono } from "hono";
+import { cors } from 'hono/cors';
 import { users, learningContents } from "../schema";
 import { createUser } from "./users";
 import { DuplicateEmailError } from './errors';
@@ -14,6 +15,17 @@ type Bindings = {
 };
 
 const app = new Hono<{ Bindings: Bindings }>();
+
+app.use(cors({
+  origin: [
+    'http://localhost:3000',
+    'http://192.168.11.6:3000',
+  ],
+  allowMethods: ['POST', 'GET', 'PUT', 'DELETE', 'OPTIONS'],
+  exposeHeaders: ['Content-Length'],
+  maxAge: 600,
+  credentials: true,
+}));
 
 app.get("/", (c) => {
   return c.text("Hello Hono!");
