@@ -4,33 +4,75 @@ import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Button from '@/components/ui/Button';
 
+export type postData = {
+  userId: string;
+  title: string;
+  totalPage: number;
+  currentPage: number;
+  note: string;
+}
+
 export default function EditPage() {
   const [title, setTitle] = useState<string>('');
   const [totalPage, setTotalPage] = useState<number | ''>('');
+  const [currentPage, setCurrentPage] = useState<number | ''>('');
   const [note, setNote] = useState<string>('');
 
   const router = useRouter();
 
-  const handleSubmit = () => {
+  //ユーザIDはテスト用に仮置き
+  //認証機能が実装されたら認証情報から取得するように修正する
+  const userId = '00000000-0000-0000-0000-000000000001';
 
+  const handleSubmit = async() => {
+
+    //TODO：この辺は適当にやってるのでちゃんと見直す
     if (!title.trim()) {
       alert('タイトルは必須入力です。');
       return;
     }
 
     if (totalPage === '' || isNaN(Number(totalPage)) || Number(totalPage) < 1) { 
-      alert('ページ数は必須入力です。1以上の数値を入力してください。');
+      alert('総ページ数は必須入力です。1以上の数値を入力してください。');
       return;
     }
 
-    //ここでPOSTする想定なのでいったん設定問題ないか確認のログ出しておく
-    //TODO：POSTとばすー
-    console.log('タイトル:', title);
-    console.log('ページ数:', totalPage);
-    console.log('フリー入力 (Note):', note);
+    if (currentPage === '' || isNaN(Number(currentPage)) || Number(currentPage) < 1) { 
+      alert('現在のページ数は必須入力です。1以上の数値を入力してください。');
+      return;
+    }
+
+    const formatPOSTData: postData = {
+      "userId": userId,
+      "title": title,
+      "totalPage": Number(totalPage),
+      "currentPage": Number(currentPage),
+      "note": note
+    }
+
+    try{
+      const response = await fetch(`${process.env.NEXT_PUBLIC_BE_URL}learning-contents`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formatPOSTData),
+      });
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+    }catch(error){
+        // TODO: 適切なエラーハンドリングに置き換える
+        console.log('エラーが発生しました:', error);
+    }finally{
+      //TODO：成功時のメッセージをlist画面で表示する。どうやるんだろう。要確認
+      router.back();
+    }
+
   };
 
   const handleCancel = () => {
+    //TODO：内容は保存されません。みたいな警告メッセージを出す。
     router.back();
   };
 
@@ -71,6 +113,25 @@ export default function EditPage() {
         />
       </div>
 
+      <div className="mb-4">
+        <label htmlFor="currentPage" className="block text-gray-700 text-sm font-bold mb-2">
+          現在ページ数:（任意）
+        </label>
+        <input
+          type="number"
+          id="currentPage"
+          value={currentPage}
+          onChange={(e) => {
+            const value = e.target.value;
+            setCurrentPage(value === '' ? '' : (isNaN(Number(value)) ? 0 : Number(value)));
+          }}
+          min="1"
+          className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+          placeholder="現在のページ数を入力"
+          required 
+        />
+      </div>
+      
       <div className="mb-6">
         <label htmlFor="note" className="block text-gray-700 text-sm font-bold mb-2">
           学習メモ:（任意）

@@ -15,7 +15,7 @@ export type LearningContent = {
     updatedAt: string;
 };
 
-export default function list(){
+export default function ListPage(){
 
   const [contents, setContents] = useState<LearningContent[]>([]);
   const  router = useRouter();
