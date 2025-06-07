@@ -1,6 +1,7 @@
 'use client'
 
 import Button from "@/components/ui/Button";
+import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
 export type LearningContent = {
@@ -17,7 +18,8 @@ export type LearningContent = {
 export default function list(){
 
   const [contents, setContents] = useState<LearningContent[]>([]);
-
+  const  router = useRouter();
+  
   const userId = '00000000-0000-0000-0000-000000000001';
   useEffect(()=>{
     const fetchUsers = async () => {
@@ -29,7 +31,6 @@ export default function list(){
         }
 
         const data = await response.json();
-        console.log(data);
         setContents(data.data);
       } catch (error) {
         // TODO: 適切なエラーハンドリングに置き換える
@@ -51,10 +52,21 @@ export default function list(){
     alert('未実装だよ');
   }
 
+  const handleAddContentClick = () => {
+    //とりあえず画面遷移だけ実装。
+    //TODO：追加した情報を一覧画面に反映させるのにリフレッシュとか必要かな？要確認。
+    router.push('/new');
+  }
+
+
   const makeList = () => {
     return (
       <div>
-        <h2>学習コンテンツリスト</h2>
+        <div className="flex flex-col md:flex-row items-center justify-between mb-4 space-y-4 md:space-y-0">
+          <div className="w-full md:w-auto">
+            <Button name='新規追加' onClick={handleAddContentClick} />
+          </div>
+        </div>  
         {contents.length === 0 ? (
           <p>学習コンテンツが見つかりませんでした。</p>
         ) : (
