@@ -21,7 +21,7 @@ const buttonStyle: React.CSSProperties = {
 export default function Button({ name, onClick }: ButtonProps) {
   return (
     <button
-			type="button"
+      type="button"
       onClick={onClick} // 受け取った onClick 関数をそのままボタンに渡す
       style={buttonStyle} // 定義したスタイルを適用
     >
