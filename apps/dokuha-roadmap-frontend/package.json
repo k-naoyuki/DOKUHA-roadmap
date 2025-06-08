@@ -5,6 +5,7 @@
   "scripts": {
     "dev": "next dev --turbopack",
     "cp:env": "cp .env.example .env.local",
+    "copy:env": "copy .env.example .env.local",
     "build": "next build",
     "start": "next start",
     "lint": "next lint"
