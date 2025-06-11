@@ -1,6 +1,7 @@
 'use client';
 
-import React, { useState } from 'react';
+import type React from 'react';
+import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Button from '@/components/ui/Button';
 
@@ -12,7 +13,7 @@ export type postData = {
   note: string;
 }
 
-export default function EditPage() {
+export default function NewPage() {
   const [title, setTitle] = useState<string>('');
   const [totalPage, setTotalPage] = useState<number | ''>('');
   const [currentPage, setCurrentPage] = useState<number | ''>('');
