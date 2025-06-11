@@ -78,7 +78,7 @@ export default function EditPage() {
 
   return (
     <div className="container mx-auto p-4 max-w-2xl">
-      <h1 className="text-3xl font-bold mb-6 text-center">コンテンツ追加</h1>
+      <h2 className="text-3xl font-bold mb-6 text-center">コンテンツ追加</h2>
       <div className="mb-4">
         <label htmlFor="title" className="block text-gray-700 text-sm font-bold mb-2">
           タイトル:（必須）
