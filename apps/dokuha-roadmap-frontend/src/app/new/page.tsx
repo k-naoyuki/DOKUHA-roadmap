@@ -61,12 +61,12 @@ export default function EditPage() {
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
-    }catch(error){
+      
+      //TODO：成功時のメッセージをlist画面で表示する。どうやるんだろう。要確認
+      router.push('/list');
+    } catch (error){
         // TODO: 適切なエラーハンドリングに置き換える
         console.log('エラーが発生しました:', error);
-    }finally{
-      //TODO：成功時のメッセージをlist画面で表示する。どうやるんだろう。要確認
-      router.back();
     }
 
   };
