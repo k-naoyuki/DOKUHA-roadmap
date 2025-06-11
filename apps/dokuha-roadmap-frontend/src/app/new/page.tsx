@@ -115,7 +115,7 @@ export default function EditPage() {
 
       <div className="mb-4">
         <label htmlFor="currentPage" className="block text-gray-700 text-sm font-bold mb-2">
-          現在ページ数:（任意）
+          現在ページ数:（必須）
         </label>
         <input
           type="number"
