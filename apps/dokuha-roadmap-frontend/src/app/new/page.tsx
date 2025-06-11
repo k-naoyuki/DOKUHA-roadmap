@@ -24,7 +24,9 @@ export default function EditPage() {
   //認証機能が実装されたら認証情報から取得するように修正する
   const userId = '00000000-0000-0000-0000-000000000001';
 
-  const handleSubmit = async() => {
+  const handleSubmit = async(event: React.FormEvent<HTMLFormElement>) => {
+console.log('test');
+    event.preventDefault()
 
     //TODO：この辺は適当にやってるのでちゃんと見直す
     if (!title.trim()) {
@@ -67,6 +69,7 @@ export default function EditPage() {
       }
       
       //TODO：成功時のメッセージをlist画面で表示する。どうやるんだろう。要確認
+      //TODO：後続タスクでURL直すのでその時にあわせて直す
       router.push('/list');
     } catch (error){
         // TODO: 適切なエラーハンドリングに置き換える
@@ -77,88 +80,92 @@ export default function EditPage() {
 
   const handleCancel = () => {
     //TODO：内容は保存されません。みたいな警告メッセージを出す。
-    router.back();
+    //TODO：後続タスクでURL直すのでその時にあわせて直す
+    router.push('/list');
   };
 
   return (
     <div className="container mx-auto p-4 max-w-2xl">
       <h2 className="text-3xl font-bold mb-6 text-center">コンテンツ追加</h2>
-      <div className="mb-4">
-        <label htmlFor="title" className="block text-gray-700 text-sm font-bold mb-2">
-          タイトル:（必須）
-        </label>
-        <input
-          type="text"
-          id="title"
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-          className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-          placeholder="コンテンツのタイトルを入力"
-          required
-        />
-      </div>
+      <form onSubmit={handleSubmit}>
+        <div className="mb-4">
+          <label htmlFor="title" className="block text-gray-700 text-sm font-bold mb-2">
+            タイトル:（必須）
+          </label>
+          <input
+            type="text"
+            id="title"
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+            placeholder="コンテンツのタイトルを入力"
+            required
+          />
+        </div>
 
-      <div className="mb-4">
-        <label htmlFor="totalPage" className="block text-gray-700 text-sm font-bold mb-2">
-          ページ数:（必須）
-        </label>
-        <input
-          type="number"
-          id="totalPage"
-          value={totalPage}
-          onChange={(e) => {
-            const value = e.target.value;
-            setTotalPage(value === '' ? '' : (Number.isNaN(Number(value)) ? 0 : Number(value)));
-          }}
-          min="1"
-          className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-          placeholder="総ページ数を入力"
-          required 
-        />
-      </div>
+        <div className="mb-4">
+          <label htmlFor="totalPage" className="block text-gray-700 text-sm font-bold mb-2">
+            ページ数:（必須）
+          </label>
+          <input
+            type="number"
+            id="totalPage"
+            value={totalPage}
+            onChange={(e) => {
+              const value = e.target.value;
+              setTotalPage(value === '' ? '' : (Number.isNaN(Number(value)) ? 0 : Number(value)));
+            }}
+            min="1"
+            className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+            placeholder="総ページ数を入力"
+            required 
+          />
+        </div>
 
-      <div className="mb-4">
-        <label htmlFor="currentPage" className="block text-gray-700 text-sm font-bold mb-2">
-          現在ページ数:（必須）
-        </label>
-        <input
-          type="number"
-          id="currentPage"
-          value={currentPage}
-          onChange={(e) => {
-            const value = e.target.value;
-            setCurrentPage(value === '' ? '' : (Number.isNaN(Number(value)) ? 0 : Number(value)));
-          }}
-          min="1"
-          className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-          placeholder="現在のページ数を入力"
-          required 
-        />
-      </div>
-      
-      <div className="mb-6">
-        <label htmlFor="note" className="block text-gray-700 text-sm font-bold mb-2">
-          学習メモ:（任意）
-        </label>
-        <textarea
-          id="note"
-          value={note}
-          onChange={(e) => setNote(e.target.value)}
-          className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline resize-y"
-          placeholder="学習メモを入力（現時点で無ければ未入力でも可）"
-        />
-      </div>
+        <div className="mb-4">
+          <label htmlFor="currentPage" className="block text-gray-700 text-sm font-bold mb-2">
+            現在ページ数:（必須）
+          </label>
+          <input
+            type="number"
+            id="currentPage"
+            value={currentPage}
+            onChange={(e) => {
+              const value = e.target.value;
+              setCurrentPage(value === '' ? '' : (Number.isNaN(Number(value)) ? 0 : Number(value)));
+            }}
+            min="1"
+            className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+            placeholder="現在のページ数を入力"
+            required 
+          />
+        </div>
+        
+        <div className="mb-6">
+          <label htmlFor="note" className="block text-gray-700 text-sm font-bold mb-2">
+            学習メモ:（任意）
+          </label>
+          <textarea
+            id="note"
+            value={note}
+            onChange={(e) => setNote(e.target.value)}
+            className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline resize-y"
+            placeholder="学習メモを入力（現時点で無ければ未入力でも可）"
+          />
+        </div>
 
-      <div className="flex items-center justify-end space-x-4">
-        <Button
-          name='キャンセル'
-          onClick={handleCancel}
-        />
-        <Button
-          name='保存'
-          onClick={handleSubmit}
-        />
-      </div>
+        <div className="flex items-center justify-end space-x-4">
+          <Button
+            type='button'
+            name='キャンセル'
+            onClick={handleCancel}
+          />
+          <Button
+            type='submit'
+            name='保存'
+          />
+        </div>
+      </form>
     </div>
   );
 }
