@@ -42,6 +42,10 @@ export default function EditPage() {
       return;
     }
 
+    if (Number(currentPage) > Number(totalPage)) {
+        alert('現在のページ数を総ページ数以下に設定してください');
+        return;
+    }
     const formatPOSTData: postData = {
       "userId": userId,
       "title": title,
