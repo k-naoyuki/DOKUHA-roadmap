@@ -26,7 +26,6 @@ export default function NewPage() {
   const userId = '00000000-0000-0000-0000-000000000001';
 
   const handleSubmit = async(event: React.FormEvent<HTMLFormElement>) => {
-console.log('test');
     event.preventDefault()
 
     //TODO：この辺は適当にやってるのでちゃんと見直す
