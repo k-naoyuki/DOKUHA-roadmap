@@ -1,7 +1,7 @@
 interface ButtonProps {
   type: 'button' | 'submit' | 'reset'; // ボタンの種類（必須）
   name: string; // ボタンの表示名（必須）
-  onClick?: () => void; // クリック時のイベントハンドラ（必須）
+  onClick?: () => void; // クリック時のイベントハンドラ（任意）
   // その他の標準HTMLボタン属性を必要に応じて追加したい場合は以下のように extends する
   // extends React.ButtonHTMLAttributes<HTMLButtonElement>
 }
