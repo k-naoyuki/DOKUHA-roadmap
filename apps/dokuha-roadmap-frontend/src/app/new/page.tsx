@@ -49,11 +49,11 @@ export default function NewPage() {
         return;
     }
     const formatPOSTData: postData = {
-      "userId": userId,
-      "title": title,
-      "totalPage": Number(totalPage),
-      "currentPage": Number(currentPage),
-      "note": note
+      userId,
+      title,
+      totalPage: Number(totalPage),
+      currentPage: Number(currentPage),
+      note
     }
 
     try{
