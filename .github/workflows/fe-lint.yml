@@ -15,4 +15,4 @@ jobs:
         with:
           version: latest
       - name: Run Biome
-        run: biome lint apps/dokuha-roadmap-frontend
+        run: biome ci apps/dokuha-roadmap-frontend
