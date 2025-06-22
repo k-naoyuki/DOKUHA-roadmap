@@ -18,5 +18,5 @@ export default function Header(){
         <UserButton />
       </SignedIn>
     </header>
-  )
+  );
 }
