@@ -70,7 +70,7 @@ export default function NewPage() {
       
       //TODO：成功時のメッセージをlist画面で表示する。どうやるんだろう。要確認
       //TODO：後続タスクでURL直すのでその時にあわせて直す
-      router.push('/list');
+      router.push('/');
     } catch (error){
         // TODO: 適切なエラーハンドリングに置き換える
         console.log('エラーが発生しました:', error);
@@ -81,7 +81,7 @@ export default function NewPage() {
   const handleCancel = () => {
     //TODO：内容は保存されません。みたいな警告メッセージを出す。
     //TODO：後続タスクでURL直すのでその時にあわせて直す
-    router.push('/list');
+    router.push('/');
   };
 
   return (
