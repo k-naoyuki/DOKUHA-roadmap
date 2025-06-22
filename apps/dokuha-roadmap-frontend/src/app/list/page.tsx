@@ -1,30 +1,31 @@
-'use client'
+'use client';
 
-import Button from "@/components/ui/Button";
-import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import Button from '@/components/ui/Button';
+import { useRouter } from 'next/navigation';
+import { useEffect, useState } from 'react';
 
 export type LearningContent = {
-    id: string;
-    userId: string;
-    title: string;
-    totalPage: number;
-    currentPage: number;
-    note: string;
-    createdAt: string;
-    updatedAt: string;
+  id: string;
+  userId: string;
+  title: string;
+  totalPage: number;
+  currentPage: number;
+  note: string;
+  createdAt: string;
+  updatedAt: string;
 };
 
-export default function ListPage(){
-
+export default function ListPage() {
   const [contents, setContents] = useState<LearningContent[]>([]);
-  const  router = useRouter();
-  
+  const router = useRouter();
+
   const userId = '00000000-0000-0000-0000-000000000001';
-  useEffect(()=>{
+  useEffect(() => {
     const fetchUsers = async () => {
       try {
-        const response = await fetch(`${process.env.NEXT_PUBLIC_BE_URL}learning-contents?userId=${userId}`);
+        const response = await fetch(
+          `${process.env.NEXT_PUBLIC_BE_URL}learning-contents?userId=${userId}`
+        );
 
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
@@ -40,33 +41,32 @@ export default function ListPage(){
       }
     };
     fetchUsers();
-  }, [])
+  }, []);
 
   const handleEditClick = () => {
     //未実装
     alert('未実装だよ');
-  }
+  };
 
   const handleDeleteClick = () => {
     //未実装
     alert('未実装だよ');
-  }
+  };
 
   const handleAddContentClick = () => {
     //とりあえず画面遷移だけ実装。
     //TODO：追加した情報を一覧画面に反映させるのにリフレッシュとか必要かな？要確認。
     router.push('/new');
-  }
-
+  };
 
   const makeList = () => {
     return (
       <div>
         <div className="flex flex-col md:flex-row items-center justify-between mb-4 space-y-4 md:space-y-0">
           <div className="w-full md:w-auto">
-            <Button name='新規追加' onClick={handleAddContentClick} />
+            <Button type="button" name="新規追加" onClick={handleAddContentClick} />
           </div>
-        </div>  
+        </div>
         {contents.length === 0 ? (
           <p>学習コンテンツが見つかりませんでした。</p>
         ) : (
@@ -84,9 +84,16 @@ export default function ListPage(){
             </thead>
             <tbody>
               {contents.map((c, index) => {
-                const progress = c.totalPage > 0 ? ((c.currentPage / c.totalPage) * 100).toFixed(1) : '0.0';
-                const updateDate = new Date(c.updatedAt).toLocaleDateString('ja-JP');
-                const registDate = new Date(c.createdAt).toLocaleDateString('ja-JP');
+                const progress =
+                  c.totalPage > 0
+                    ? ((c.currentPage / c.totalPage) * 100).toFixed(1)
+                    : '0.0';
+                const updateDate = new Date(c.updatedAt).toLocaleDateString(
+                  'ja-JP'
+                );
+                const registDate = new Date(c.createdAt).toLocaleDateString(
+                  'ja-JP'
+                );
 
                 return (
                   <tr key={c.id} className="border-b border-gray-300">
@@ -96,16 +103,10 @@ export default function ListPage(){
                     <td className="text-center">{updateDate}</td>
                     <td className="text-center">{registDate}</td>
                     <td className="text-center">
-                      <Button
-                        name='編集'
-                        onClick={handleEditClick}
-                      />
+                      <Button type="button" name="編集" onClick={handleEditClick} />
                     </td>
                     <td className="text-center">
-                      <Button
-                        name='削除'
-                        onClick={handleDeleteClick}
-                      />
+                      <Button type="button" name="削除" onClick={handleDeleteClick} />
                     </td>
                   </tr>
                 );
@@ -115,12 +116,7 @@ export default function ListPage(){
         )}
       </div>
     );
-  }
+  };
 
-  return (
-    <div>
-      {makeList()}
-    </div>
-  );
-
+  return <div>{makeList()}</div>;
 }
