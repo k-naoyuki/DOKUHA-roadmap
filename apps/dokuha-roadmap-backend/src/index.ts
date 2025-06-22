@@ -106,7 +106,7 @@ app.post("/learning-contents", async (c) => {
 
     const newLearningContent: CreateLearningContent = {
       ...validatedData,
-      currentPage: validatedData.currentPage ?? 1,
+      currentPage: validatedData.currentPage ?? 0,
       note: validatedData.note || '',
     };
 
