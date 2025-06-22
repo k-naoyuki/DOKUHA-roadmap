@@ -39,8 +39,8 @@ export default function NewPage() {
       return;
     }
 
-    if (currentPage === '' || Number.isNaN(Number(currentPage)) || Number(currentPage) < 1) { 
-      alert('現在のページ数は必須入力です。1以上の数値を入力してください。');
+    if (currentPage === '' || Number.isNaN(Number(currentPage)) || Number(currentPage) < 0) { 
+      alert('現在のページ数は必須入力です。0以上の数値を入力してください。');
       return;
     }
 
@@ -134,9 +134,9 @@ export default function NewPage() {
               const value = e.target.value;
               setCurrentPage(value === '' ? '' : (Number.isNaN(Number(value)) ? 0 : Number(value)));
             }}
-            min="1"
+            min="0"
             className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-            placeholder="現在のページ数を入力"
+            placeholder="現在のページ数を入力。まだ読み進めていない場合は0を入力してください。"
             required 
           />
         </div>

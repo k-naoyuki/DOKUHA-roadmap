@@ -87,7 +87,7 @@ const createLearningContentSchema = z.object({
   userId: z.string().uuid(),
   title: z.string().min(1).max(255),
   totalPage: z.number().min(1),
-  currentPage: z.number().min(1).optional(),
+  currentPage: z.number().min(0).optional(),
   note: z.string().optional(),
 }).refine(data => {
   // currentPageが指定されている場合、totalPage以下であることを確認
@@ -106,7 +106,7 @@ app.post("/learning-contents", async (c) => {
 
     const newLearningContent: CreateLearningContent = {
       ...validatedData,
-      currentPage: validatedData.currentPage || 1,
+      currentPage: validatedData.currentPage ?? 1,
       note: validatedData.note || '',
     };
 
