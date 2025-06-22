@@ -164,7 +164,7 @@ export default function DetailPage() {
           placeholder="ここに記録する"
           value={note}
           onChange={(e) => setNote(e.target.value)}
-        ></textarea>
+        />
         <div className="mt-4 flex flex-col md:flex-row justify-end gap-3">
           <Button
             name='記録を保存'
