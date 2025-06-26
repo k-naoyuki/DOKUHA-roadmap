@@ -1,1 +1,1 @@
-export const USER_ID = process.env.LOCAL_USER_ID;
+export const USER_ID = process.env.NEXT_PUBLIC_LOCAL_USER_ID;
