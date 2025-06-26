@@ -4,6 +4,7 @@ import type React from 'react';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Button from '@/components/ui/Button';
+import { USER_ID } from '../../const/user';
 
 export type postData = {
   userId: string;
@@ -23,10 +24,14 @@ export default function NewPage() {
 
   //ユーザIDはテスト用に仮置き
   //認証機能が実装されたら認証情報から取得するように修正する
-  const userId = '00000000-0000-0000-0000-000000000001';
 
   const handleSubmit = async(event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault()
+
+    if (!USER_ID) {
+      alert('ユーザーIDが設定されていません。');
+      return;
+    }
 
     //TODO：この辺は適当にやってるのでちゃんと見直す
     if (!title.trim()) {
@@ -49,7 +54,7 @@ export default function NewPage() {
         return;
     }
     const formatPOSTData: postData = {
-      userId,
+      userId: USER_ID,
       title,
       totalPage: Number(totalPage),
       currentPage: Number(currentPage),
@@ -70,7 +75,7 @@ export default function NewPage() {
       
       //TODO：成功時のメッセージをlist画面で表示する。どうやるんだろう。要確認
       //TODO：後続タスクでURL直すのでその時にあわせて直す
-      router.push('/list');
+      router.push('/');
     } catch (error){
         // TODO: 適切なエラーハンドリングに置き換える
         console.log('エラーが発生しました:', error);
