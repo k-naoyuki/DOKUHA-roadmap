@@ -1,6 +1,7 @@
 'use client';
 
 import Button from '@/components/ui/Button';
+import { USER_ID } from '@/const/user';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
@@ -19,12 +20,11 @@ export default function ListPage() {
   const [contents, setContents] = useState<LearningContent[]>([]);
   const router = useRouter();
 
-  const userId = '00000000-0000-0000-0000-000000000001';
   useEffect(() => {
     const fetchUsers = async () => {
       try {
         const response = await fetch(
-          `${process.env.NEXT_PUBLIC_BE_URL}learning-contents?userId=${userId}`
+          `${process.env.NEXT_PUBLIC_BE_URL}learning-contents?userId=${USER_ID}`
         );
 
         if (!response.ok) {
