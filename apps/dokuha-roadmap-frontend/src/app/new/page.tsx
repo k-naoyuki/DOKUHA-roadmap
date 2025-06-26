@@ -86,7 +86,7 @@ export default function NewPage() {
   const handleCancel = () => {
     //TODO：内容は保存されません。みたいな警告メッセージを出す。
     //TODO：後続タスクでURL直すのでその時にあわせて直す
-    router.push('/list');
+    router.push('/');
   };
 
   return (
