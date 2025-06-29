@@ -53,7 +53,7 @@ export default function DetailPage() {
       }
     };
     fetchContent();
-  }, [contentId, router]);
+  }, [contentId]);
 
   const onRecordSubmit = async (e: React.FormEvent) => {
 
