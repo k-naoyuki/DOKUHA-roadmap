@@ -112,50 +112,50 @@ export default function DetailPage() {
 
   return (
     <div className="flex flex-col h-screen p-8 bg-gray-50 relative">
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
-        <div className="flex-grow">
-          <h1 className="text-3xl font-extrabold text-gray-800">{contentTitle}</h1>
-          <p className="text-lg text-gray-600 mt-2">
-            <label htmlFor="currentPageInput">
-            現在のページ: 
-            <input
-              id="currentPageInput"
-              type="number"
-              value={currentPage}
-              onChange={(e) => {
-                const value = e.target.value;
-                setCurrentPage(value === '' ? 0 : (Number.isNaN(Number(value)) ? 0 : Number(value)));
-              }}
-              min="0"
-              max={totalPage}
-              className="ml-2 w-24 p-1 border border-gray-300 rounded-md text-center font-semibold text-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-            </label>
-            <span className="ml-1"> / {totalPage}</span>
-          </p>
-        </div>
-
-        <div className="w-full md:w-1/2 lg:w-1/3 flex-shrink-0">
-          <div className="w-full bg-gray-200 rounded-full h-8 overflow-hidden">
-            <div
-              className="bg-blue-500 h-full rounded-full transition-all duration-500 ease-out flex items-center justify-center"
-              style={{ width: `${clampedProgress}%` }}
-            >
-              <span className="text-white text-sm font-bold drop-shadow-sm">
-                {clampedProgress.toFixed(0)}%
-              </span>
-            </div>
-          </div>
-          <p className="text-center text-blue-700 font-semibold mt-2">
-            {getProgressMessage(progress)}
-          </p>
-        </div>
-      </div>
-
       <form onSubmit={onRecordSubmit} className="flex-grow flex flex-col bg-white p-6 rounded-lg shadow-md">
-        <label htmlFor="noteTextarea" className="sr-only">記録</label>
-
+      <label htmlFor="noteTextarea" className="sr-only">記録</label>
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
+          <div className="flex-grow">
+            <h1 className="text-3xl font-extrabold text-gray-800">{contentTitle}</h1>
+            <p className="text-lg text-gray-600 mt-2">
+              <label htmlFor="currentPageInput">
+              現在のページ: 
+              <input
+                id="currentPageInput"
+                type="number"
+                value={currentPage}
+                name="currentPage"
+                onChange={(e) => {
+                  const value = e.target.value;
+                  setCurrentPage(value === '' ? 0 : (Number.isNaN(Number(value)) ? 0 : Number(value)));
+                }}
+                min="0"
+                max={totalPage}
+                className="ml-2 w-24 p-1 border border-gray-300 rounded-md text-center font-semibold text-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+              </label>
+              <span className="ml-1"> / {totalPage}</span>
+            </p>
+          </div>
+          <div className="w-full md:w-1/2 lg:w-1/3 flex-shrink-0">
+            <div className="w-full bg-gray-200 rounded-full h-8 overflow-hidden">
+              <div
+                className="bg-blue-500 h-full rounded-full transition-all duration-500 ease-out flex items-center justify-center"
+                style={{ width: `${clampedProgress}%` }}
+              >
+                <span className="text-white text-sm font-bold drop-shadow-sm">
+                  {clampedProgress.toFixed(0)}%
+                </span>
+              </div>
+            </div>
+            <p className="text-center text-blue-700 font-semibold mt-2">
+              {getProgressMessage(progress)}
+            </p>
+          </div>
+        </div>
         <textarea
+          id="noteTextarea"
+          name="note"
           className="flex-grow w-full p-4 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none text-gray-800"
           placeholder="ここに記録する"
           value={note}
