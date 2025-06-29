@@ -10,14 +10,6 @@ type postData = {
   note: string;
 }
 
-export type getData = {
-  userId: string;
-  title: string;
-  totalPage: number;
-  currentPage: number;
-  note: string;
-}
-
 //TODO:alertの箇所はトースト通知ないしはonBlurでやりたい
 export default function DetailPage() {
   const router = useRouter();
