@@ -17,11 +17,11 @@ export default function DetailPage() {
   const { contentId } = useParams();
   const [contentTitle, setContentTitle] = useState('');
   const [currentPage, setCurrentPage] = useState(0);
-  const [totalPage, setTotalPage] = useState(0);
+  const [totalPage, setTotalPage] = useState(1);
   const [note, setNote] = useState('');
   const [isLoading, setIsLoading] = useState(true);
 
-  const progress = (currentPage / totalPage) * 100;
+  const progress = totalPage > 0 ? (currentPage / totalPage) * 100 : 0;
   const clampedProgress = Math.max(0, Math.min(100, progress));
 
   useEffect(() => {
