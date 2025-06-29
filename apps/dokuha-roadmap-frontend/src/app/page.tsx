@@ -43,9 +43,8 @@ export default function ListPage() {
     fetchUsers();
   }, []);
 
-  const handleEditClick = () => {
-    //未実装
-    alert('未実装だよ');
+  const handleEditClick = (contentId: string) => {
+    router.push(`/details/${contentId}`);
   };
 
   const handleDeleteClick = () => {
@@ -103,7 +102,7 @@ export default function ListPage() {
                     <td className="text-center">{updateDate}</td>
                     <td className="text-center">{registDate}</td>
                     <td className="text-center">
-                      <Button type="button" name="編集" onClick={handleEditClick} />
+                      <Button type="button" name="編集" onClick={() => handleEditClick(c.id)} />
                     </td>
                     <td className="text-center">
                       <Button type="button" name="削除" onClick={handleDeleteClick} />
