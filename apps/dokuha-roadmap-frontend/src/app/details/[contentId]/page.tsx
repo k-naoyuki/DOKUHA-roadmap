@@ -5,7 +5,7 @@ import { useEffect, useState } from 'react';
 
 import Button from "@/components/ui/Button";
 
-export type postData = {
+type postData = {
   currentPage: number;
   note: string;
 }
