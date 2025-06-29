@@ -46,8 +46,7 @@ export default function DetailPage() {
         setTotalPage(jsonResponse.totalPage);
         setNote(jsonResponse.note);
       } catch (error) {
-        alert('エラーが発生しました。トップページに戻ります。');//TODO
-        router.push('/');
+        alert('エラーが発生しました。時間をおいて再度保存してください。');
       } finally {
         setIsLoading(false);
       }
