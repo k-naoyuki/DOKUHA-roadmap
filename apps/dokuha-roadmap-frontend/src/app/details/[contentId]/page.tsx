@@ -140,10 +140,7 @@ export default function DetailPage() {
             </div>
           </div>
           <p className="text-center text-blue-700 font-semibold mt-2">
-            {progress < 25 && '始まったばかり！コツコツ頑張ろう！'}
-            {progress >= 25 && progress < 75 && 'いい感じ！この調子で進めよう！'}
-            {progress >= 75 && progress < 100 && 'もう少しで読了！がんばれ！'}
-            {progress === 100 && 'D　O　K　U　H　A　！'}
+            {getProgressMessage(progress)}
           </p>
         </div>
       </div>
