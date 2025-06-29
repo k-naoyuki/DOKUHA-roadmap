@@ -112,7 +112,7 @@ export default function DetailPage() {
   return (
     <div className="flex flex-col h-screen p-8 bg-gray-50 relative">
       <form onSubmit={onRecordSubmit} className="flex-grow flex flex-col bg-white p-6 rounded-lg shadow-md">
-      <label htmlFor="noteTextarea" className="sr-only">記録</label>
+        <label htmlFor="noteTextarea" className="sr-only">記録</label>
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
           <div className="flex-grow">
             <h1 className="text-3xl font-extrabold text-gray-800">{contentTitle}</h1>
