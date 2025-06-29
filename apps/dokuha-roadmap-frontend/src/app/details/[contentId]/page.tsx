@@ -102,6 +102,13 @@ export default function DetailPage() {
   if (isLoading) {
     return <div className="flex justify-center items-center h-screen">データ読み込み中...</div>;
   }
+  
+  const getProgressMessage = (progress: number): string => {
+    if (progress === 100) return 'D　O　K　U　H　A　！';
+    if (progress >= 75) return 'もう少しで読了！がんばれ！';
+    if (progress >= 25) return 'いい感じ！この調子で進めよう！';
+    return '始まったばかり！コツコツ頑張ろう！';
+  };
 
   return (
     <div className="flex flex-col h-screen p-8 bg-gray-50 relative">
