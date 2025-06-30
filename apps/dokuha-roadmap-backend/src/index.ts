@@ -79,8 +79,14 @@ app.post("/api/webhooks/user", async (c) => {
     return c.text('Webhook verification failed', 400);
   }
 
+  // 検証成功後の処理
+  const { id } = evt.data;
+  const eventType = evt.type;
+  console.log(`Webhook with an ID of ${id} and type of ${eventType} verified successfully.`);
 
-  return c.text("Hello Hono!");
+  //... イベントタイプに応じた処理...
+
+  return c.text('Success', 200);
 });
 
 /*****************************************
