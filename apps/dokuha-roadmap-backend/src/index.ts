@@ -9,6 +9,8 @@ import { DuplicateEmailError } from './errors';
 import { v4 as uuidv4 } from 'uuid';
 import { CreateLearningContent } from '../types/learning-contents';
 import { z } from 'zod';
+import { Webhook } from 'svix';
+import type { WebhookEvent } from '@clerk/backend';
 
 type Bindings = {
   productionDB: D1Database;
@@ -29,6 +31,92 @@ app.use(cors({
 
 app.get("/", (c) => {
   return c.text("Hello Hono!");
+});
+
+app.post("/api/webhooks/user", async (c) => {
+  console.log("GET / 🤔", `Path: ${c.req.path}` + `, Method: ${c.req.method}`);
+  const SIGNING_SECRET = process.env.SIGNING_SECRET;
+  console.log(`SIGNING_SECRET: ${SIGNING_SECRET}`);
+
+  if (!SIGNING_SECRET) {
+    throw new Error('Error: Please add SIGNING_SECRET from Clerk Dashboard to .env or .env.local');
+  }
+
+  const wh = new Webhook(SIGNING_SECRET);
+  console.log(`wh: ${wh}`);
+
+  // Get headers
+  const headers = c.req.header();
+  console.log(`headers: ${JSON.stringify(headers)}`);
+  const svix_id = headers['svix-id'];
+  const svix_timestamp = headers['svix-timestamp'];
+  const svix_signature = headers['svix-signature'];
+
+  // If there are no headers, error out
+  if (!svix_id || !svix_timestamp || !svix_signature) {
+    return c.json(
+        { success: false, error: 'Missing headers' },
+        { status: 400 }
+      );
+  }
+
+  // Get body
+  const payload = await c.req.json();
+  const body = JSON.stringify(payload);
+  console.log(`body: ${body}`);
+
+  let evt: WebhookEvent;
+
+  try {
+    // 3. 署名を検証
+    evt = wh.verify(body, {
+      'svix-id': svix_id,
+      'svix-timestamp': svix_timestamp,
+      'svix-signature': svix_signature,
+    }) as WebhookEvent;
+  } catch (err: any) {
+    console.error('Error verifying webhook:', err.message);
+    return c.text('Webhook verification failed', 400);
+  }
+
+  // 検証成功後の処理
+  const { id } = evt.data;
+  const eventType = evt.type;
+  console.log(`🤔 Webhook with an ID of ${id} and type of ${eventType} verified successfully.`);
+
+  //... イベントタイプに応じた処理...
+  if (eventType === 'user.created') {
+    console.log('User created event received:', evt.data);
+    // ユーザ作成時の処理をここに追加
+    const db = drizzle(c.env.productionDB);
+    try {
+      // ユーザ情報をDBに保存する処理
+      // TODO: createUserの中身と、Chromeテーブルの定義を結構変更する必要がある
+      // const userId = await createUser(db, evt.data);
+      const userId = "test"
+      console.log(`User created with ID: ${userId}`);
+    } catch (error) {
+      if (error instanceof DuplicateEmailError) {
+        console.error('Duplicate email error:', error.message);
+        return c.json(
+          { success: false, error: error.message },
+          { status: 409 }
+        );
+      }
+      console.error('Unexpected error while creating user:', error);
+      return c.json(
+        { success: false, error: 'Internal server error' },
+        { status: 500 }
+      );
+    }
+  } else if (eventType === 'user.deleted') {
+    console.log('User deleted event received:', evt.data);
+    // TODO: ユーザ削除時の処理をここに追加
+  } else {
+    console.log(`Unhandled event type: ${eventType}`);
+  }
+
+  return c.text('Success', 200);
 });
 
 /*****************************************
