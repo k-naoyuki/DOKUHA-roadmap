@@ -9,6 +9,7 @@ import { DuplicateEmailError } from './errors';
 import { v4 as uuidv4 } from 'uuid';
 import { CreateLearningContent } from '../types/learning-contents';
 import { z } from 'zod';
+import { Webhook } from 'svix';
 
 type Bindings = {
   productionDB: D1Database;
@@ -39,6 +40,25 @@ app.post("/api/webhooks/user", (c) => {
   if (!SIGNING_SECRET) {
     throw new Error('Error: Please add SIGNING_SECRET from Clerk Dashboard to .env or .env.local');
   }
+
+  const wh = new Webhook(SIGNING_SECRET);
+  console.log(`wh: ${wh}`);
+
+  // Get headers
+  const headers = c.req.header();
+  console.log(`headers: ${JSON.stringify(headers)}`);
+  const svix_id = headers['svix-id'];
+  const svix_timestamp = headers['svix-timestamp'];
+  const svix_signature = headers['svix-signature'];
+
+  // If there are no headers, error out
+  if (!svix_id || !svix_timestamp || !svix_signature) {
+    return c.json(
+        { success: false, error: 'Missing headers' },
+        { status: 400 }
+      );
+  }
+
 
   return c.text("Hello Hono!");
 });
