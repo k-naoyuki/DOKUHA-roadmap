@@ -31,6 +31,11 @@ app.get("/", (c) => {
   return c.text("Hello Hono!");
 });
 
+app.post("/api/webhooks/user", (c) => {
+  console.log("GET / 🤔", `Path: ${c.req.path}` + `, Method: ${c.req.method}`);
+  return c.text("Hello Hono!");
+});
+
 /*****************************************
  * get users (exclude password)
  *****************************************/
