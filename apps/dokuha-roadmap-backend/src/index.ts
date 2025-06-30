@@ -82,9 +82,39 @@ app.post("/api/webhooks/user", async (c) => {
   // 検証成功後の処理
   const { id } = evt.data;
   const eventType = evt.type;
-  console.log(`Webhook with an ID of ${id} and type of ${eventType} verified successfully.`);
+  console.log(`🤔 Webhook with an ID of ${id} and type of ${eventType} verified successfully.`);
 
   //... イベントタイプに応じた処理...
+  if (eventType === 'user.created') {
+    console.log('User created event received:', evt.data);
+    // ユーザ作成時の処理をここに追加
+    const db = drizzle(c.env.productionDB);
+    try {
+      // ユーザ情報をDBに保存する処理
+      // TODO: createUserの中身と、Chromeテーブルの定義を結構変更する必要がある
+      // const userId = await createUser(db, evt.data);
+      const userId = "test"
+      console.log(`User created with ID: ${userId}`);
+    } catch (error) {
+      if (error instanceof DuplicateEmailError) {
+        console.error('Duplicate email error:', error.message);
+        return c.json(
+          { success: false, error: error.message },
+          { status: 409 }
+        );
+      }
+      console.error('Unexpected error while creating user:', error);
+      return c.json(
+        { success: false, error: 'Internal server error' },
+        { status: 500 }
+      );
+    }
+  } else if (eventType === 'user.deleted') {
+    console.log('User deleted event received:', evt.data);
+    // TODO: ユーザ削除時の処理をここに追加
+  } else {
+    console.log(`Unhandled event type: ${eventType}`);
+  }
 
   return c.text('Success', 200);
 });
