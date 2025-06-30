@@ -33,6 +33,13 @@ app.get("/", (c) => {
 
 app.post("/api/webhooks/user", (c) => {
   console.log("GET / 🤔", `Path: ${c.req.path}` + `, Method: ${c.req.method}`);
+  const SIGNING_SECRET = process.env.SIGNING_SECRET;
+  console.log(`SIGNING_SECRET: ${SIGNING_SECRET}`);
+
+  if (!SIGNING_SECRET) {
+    throw new Error('Error: Please add SIGNING_SECRET from Clerk Dashboard to .env or .env.local');
+  }
+
   return c.text("Hello Hono!");
 });
 
