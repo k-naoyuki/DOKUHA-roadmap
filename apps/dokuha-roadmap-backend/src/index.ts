@@ -10,6 +10,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { CreateLearningContent } from '../types/learning-contents';
 import { z } from 'zod';
 import { Webhook } from 'svix';
+import type { WebhookEvent } from '@clerk/backend';
 
 type Bindings = {
   productionDB: D1Database;
@@ -32,7 +33,7 @@ app.get("/", (c) => {
   return c.text("Hello Hono!");
 });
 
-app.post("/api/webhooks/user", (c) => {
+app.post("/api/webhooks/user", async (c) => {
   console.log("GET / 🤔", `Path: ${c.req.path}` + `, Method: ${c.req.method}`);
   const SIGNING_SECRET = process.env.SIGNING_SECRET;
   console.log(`SIGNING_SECRET: ${SIGNING_SECRET}`);
@@ -57,6 +58,25 @@ app.post("/api/webhooks/user", (c) => {
         { success: false, error: 'Missing headers' },
         { status: 400 }
       );
+  }
+
+  // Get body
+  const payload = await c.req.json();
+  const body = JSON.stringify(payload);
+  console.log(`body: ${body}`);
+
+  let evt: WebhookEvent;
+
+  try {
+    // 3. 署名を検証
+    evt = wh.verify(body, {
+      'svix-id': svix_id,
+      'svix-timestamp': svix_timestamp,
+      'svix-signature': svix_signature,
+    }) as WebhookEvent;
+  } catch (err: any) {
+    console.error('Error verifying webhook:', err.message);
+    return c.text('Webhook verification failed', 400);
   }
 
 
